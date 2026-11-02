@@ -4,13 +4,13 @@ from __future__ import annotations
 import copy
 from collections.abc import Callable
 
-from . import events as ev
+from . import dice, events as ev
 from .catalog import Catalog
 from .combat import damage_pipeline, prevention, start_of_turn_damage
 from .events import Action
 from .i18n import Msg, msg
 from .setup import GameSetup
-from .state import COUNT_TOKENS, EnemyTitan, FightResult, GameState, LogEntry, Reveal
+from .state import COUNT_TOKENS, EnemyTitan, FightResult, GameState, LogEntry, Reveal, Roll
 
 FIGHT_END_REASONS = ("enemy_defeated", "player_defeated", "both_defeated", "enemy_returned", "player_returned")
 
@@ -120,6 +120,12 @@ def _reveal_upgrades(state: GameState) -> None:
 def _reset_turn(state: GameState) -> None:
     state.active_side = None
     state.turn_started = False
+    _reset_rolls(state)
+
+
+def _reset_rolls(state: GameState) -> None:
+    state.turn_rolls = []
+    state.turn_extra_actions = 0
 
 
 # ----------------------------------------------------------------- fight flow
@@ -149,6 +155,7 @@ def start_turn(state: GameState) -> None:
     if state.phase != "combat" or state.active_side != "enemy" or state.turn_started or t is None:
         return
     state.turn_no += 1
+    _reset_rolls(state)
     st = t.statuses
     dmg = start_of_turn_damage(st.poison, st.fire)
     if dmg:
@@ -172,6 +179,7 @@ def end_turn(state: GameState) -> None:
         return
     ending = state.active_side
     _log(state, f"log.turn_ends_{ending}")
+    _reset_rolls(state)
     state.active_side = "players" if ending == "enemy" else "enemy"
     state.turn_started = state.active_side == "players"
     if state.active_side == "players":
@@ -261,6 +269,8 @@ def flag(state: GameState, target: str, flag: str, value: bool) -> None:
     t = state.find(target)
     if t is None or flag not in ("charged", "ultimate_form"):
         return
+    if flag == "charged" and value and not t.charged and state.arena is t and state.active_side == "enemy" and state.phase == "combat":
+        state.turn_extra_actions += 1  # rolled Charge with a gray token: another Action
     setattr(t, flag, bool(value))
     _log(state, f"log.flag_{'on' if value else 'off'}", name=t.name, flag=msg(f"flag.{flag}"))
 
@@ -342,6 +352,40 @@ def swap(state: GameState, with_id: str) -> None:
     _hint(state, "hint.swap")
 
 
+# ------------------------------------------------------------------ enemy rolls
+
+def enemy_roll(state: GameState, faces: list[str] | None = None, token: str = "none") -> None:
+    """Records the enemy's roll. The result is shown, never applied: no Life, token or Charge changes."""
+    t = state.arena
+    faces = [str(f) for f in (faces or [])][:2]
+    if t is None or state.phase != "combat" or state.active_side != "enemy" or any(dice.face(f) is None for f in faces):
+        _log(state, "log.roll_ignored")
+        return
+    token = token if token in ("blessed", "cursed") and len(faces) == 2 else "none"
+    r = Roll(faces=faces, token=token)  # type: ignore[arg-type]
+    state.turn_rolls.append(r)
+    n = len(state.turn_rolls)
+    if not faces:
+        _log(state, "log.roll_table", name=t.name, n=n)
+    elif len(faces) == 1:
+        _log(state, "log.roll", name=t.name, face=msg(f"die.{faces[0]}"), n=n)
+    else:
+        _log(state, "log.roll_two", name=t.name, a=msg(f"die.{faces[0]}"), b=msg(f"die.{faces[1]}"),
+             token=msg(f"token.{token}") if token != "none" else "", n=n)
+        if r.doubles and token != "none":
+            _hint(state, "hint.doubles", token=msg(f"token.{token}"))
+
+
+def roll_pick(state: GameState, index: int) -> None:
+    """The die that counts after a Blessed or Cursed roll."""
+    last = state.turn_rolls[-1] if state.turn_rolls else None
+    if last is None or not last.pending or index not in (0, 1):
+        return
+    last.pick = int(index)
+    who = "players" if last.token == "cursed" else "enemy"
+    _log(state, f"log.roll_pick_{who}", face=msg(f"die.{last.faces[last.pick]}"))
+
+
 def advance_fight(state: GameState) -> None:
     if state.phase != "cleanup" or state.result is None:
         return
@@ -387,4 +431,6 @@ HANDLERS: dict[str, Callable[..., None]] = {
     ev.ADD_ENEMY_UPGRADE: add_enemy_upgrade,
     ev.NOTE: note,
     ev.ADVANCE_FIGHT: advance_fight,
+    ev.ROLL: enemy_roll,
+    ev.ROLL_PICK: roll_pick,
 }

@@ -369,3 +369,121 @@ def test_fight_menu_switches_language_without_changing_game():
     assert at.session_state["fx_queue"] == queue
     _click(at, "menu_langbtn_en")
     assert any(b.label == "Enemy starts" for b in at.button)
+
+
+# ------------------------------------------------------------------ enemy dice
+
+def enemy_turn_page(*extra, level="Expert", dice="App"):
+    from finaltitan import events as ev
+    from finaltitan.events import act
+
+    def pre(at):
+        prepared(at)
+        at.session_state["opt_level"] = level
+        at.session_state["opt_dice"] = dice
+        at.session_state["events"] = [act(ev.BEGIN_GAME), act(ev.SET_STARTER, side="enemy"), *extra]
+        at.session_state["version"] = 2
+
+    return run_page("arena_page", pre)
+
+
+def _markdown(at):
+    return " ".join(m.value for m in at.markdown)
+
+
+def test_roll_button_rolls_a_die_and_fills_the_tracker():
+    at = enemy_turn_page()
+    assert not at.exception, at.exception
+    assert "Action 1 of 1" in _markdown(at)
+    _click(at, "ft_enemy_roll")
+    rolls = [e for e in at.session_state["events"] if e.kind == "roll"]
+    assert len(rolls) == 1 and len(rolls[0].args["faces"]) == 1 and rolls[0].args["token"] == "none"
+    assert rolls[0].args["faces"][0] in ("blue", "green", "yellow", "red", "charge", "miss")
+    assert [c["kind"] for c in at.session_state.fx_queue][0] == "roll"
+    assert "All Actions rolled" in _markdown(at)
+    assert any(b.key == "ft_enemy_roll_done" for b in at.button)  # gray, but still usable
+    _click(at, "ft_enemy_roll_done")
+    assert len([e for e in at.session_state["events"] if e.kind == "roll"]) == 2
+    _click(at, "undo_top")
+    assert len([e for e in at.session_state["events"] if e.kind == "roll"]) == 1
+    assert at.session_state.fx_queue == []
+
+
+def test_roll_never_touches_the_game_state_beyond_the_log():
+    at = enemy_turn_page()
+    before = at.session_state["_game"][1].arena
+    life, charged = before.life, before.charged
+    for _ in range(3):
+        _click(at, next(b.key for b in at.button if b.key and b.key.startswith("ft_enemy_roll")))
+    arena = at.session_state["_game"][1].arena
+    assert (arena.life, arena.charged) == (life, charged)
+
+
+def test_table_mode_marks_an_action_without_rolling_a_die():
+    at = enemy_turn_page(dice="Table")
+    assert any(b.label == "Mark as rolled" for b in at.button)
+    _click(at, "ft_enemy_roll")
+    roll = next(e for e in at.session_state["events"] if e.kind == "roll")
+    assert roll.args == {"faces": [], "token": "none"}
+
+
+def test_blessed_enemy_rolls_two_dice_and_the_players_pick_one():
+    from finaltitan import events as ev
+    from finaltitan.events import act
+
+    at = enemy_turn_page()
+    arena = at.session_state["_game"][1].arena.card_id
+    at.session_state["events"] = [*at.session_state["events"], act(ev.TOKEN, target=arena, token="blessed", delta=1)]
+    at.session_state["version"] += 1
+    at.run()
+    _click(at, "ft_enemy_roll")
+    roll = next(e for e in at.session_state["events"] if e.kind == "roll")
+    assert len(roll.args["faces"]) == 2 and roll.args["token"] == "blessed"
+    state = at.session_state["_game"][1]
+    if state.turn_rolls[-1].doubles:
+        assert any(b.key == "ft_remove_token" for b in at.button)
+        _click(at, "ft_remove_token")
+        assert at.session_state["_game"][1].arena.statuses.blessed_cursed == "none"
+    else:
+        picks = [b for b in at.button if b.key and b.key.startswith("ft_pick_")]
+        assert len(picks) == 2
+        assert at.session_state["_game"][1].turn_rolls[-1].pending
+        _click(at, picks[1].key)
+        assert at.session_state["_game"][1].turn_rolls[-1].pick == 1
+        assert not any(b.key and b.key.startswith("ft_pick_") for b in at.button)
+        assert [c["kind"] for c in at.session_state.fx_queue][0] == "roll_pick"
+
+
+def test_roll_button_and_tracker_speak_german():
+    def pre(at):
+        prepared(at)
+        at.session_state["opt_level"] = "Expert"
+        at.session_state["lang"] = "de"
+        from finaltitan import events as ev
+        from finaltitan.events import act
+        at.session_state["events"] = [act(ev.BEGIN_GAME), act(ev.SET_STARTER, side="enemy")]
+        at.session_state["version"] = 2
+
+    at = run_page("arena_page", pre)
+    assert not at.exception, at.exception
+    assert any(b.label == "Würfeln" for b in at.button)
+    assert "Aktion 1 von 1" in _markdown(at)
+
+
+def test_the_fight_menu_switches_enemy_dice_mode():
+    at = enemy_turn_page()
+    box = next(s for s in at.selectbox if s.key == "_fight_dice")
+    box.select("Table").run()
+    assert at.session_state["opt_dice"] == "Table"
+    assert any(b.label == "Mark as rolled" for b in at.button)
+
+
+def test_expert_mode_hides_the_result_hint_but_beginner_keeps_it():
+    from finaltitan import events as ev
+    from finaltitan.events import act
+
+    roll = act(ev.ROLL, faces=["red"], token="none")
+    expert = enemy_turn_page(roll, level="Expert")
+    assert "resolve the glowing icon" not in _markdown(expert)
+    beginner = enemy_turn_page(roll, level="Beginner")
+    assert "resolve the glowing icon" in _markdown(beginner)

@@ -2,7 +2,7 @@
 
 A Streamlit web app that plays the **enemy team** in the Solo & Co-op mode of the card game *Final Titan*.
 
-The app is an enemy display: one shared screen at the table shows the current enemy Titan, its Life and tokens, the active enemy Upgrades, and the enemies still to come. Players keep handling their own Titans, tokens and cards with the physical game. All dice, including the enemy's, are rolled physically. The app never rolls dice and never asks for a die result.
+The app is an enemy display: one shared screen at the table shows the current enemy Titan, its Life and tokens, the active enemy Upgrades, and the enemies still to come. Players keep handling their own Titans, tokens and cards with the physical game. The app rolls the enemy's dice and points at the result on the enemy card, but it never applies it: you resolve it by hand. Your own dice stay physical, and you can switch the enemy's dice back to the table in the menu.
 
 ## Features
 
@@ -44,12 +44,12 @@ Streamlit opens the app in your browser, by default at http://localhost:8501. It
 3. **Enemy**: follow the instruction panel. Each fight goes like this:
    - The enemy Titan enters as Champion or Challenger.
    - You tell the app who starts.
-   - On the enemy's turn, you roll for the enemy and resolve the result on its card.
+   - On the enemy's turn, you press **Roll** once per Action. The die lands, the matching Attack Chart icon on the enemy card glows, and you resolve the result. With Blessed or Cursed, two dice are thrown and you click the one that counts.
    - On your turn, you enter the damage and tokens you deal to the enemy.
    - When the fight ends, the app runs the clean-up and reveals the next Upgrade.
 4. **Log and save**: review the log, or save and load the game.
 
-During a fight, the top bar is replaced by the **☰ Menu**: guidance level, links to the other pages, the effect settings (FX intensity, cinematics, animation speed, sound, taunts, K.O. style, reduced motion) and a **New game** button.
+During a fight, the top bar is replaced by the **☰ Menu**: guidance level, links to the other pages, the enemy dice setting (App or Table), the effect settings (FX intensity, cinematics, animation speed, sound, taunts, K.O. style, reduced motion) and a **New game** button.
 
 ## Running the tests
 

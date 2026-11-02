@@ -216,6 +216,8 @@ function sfx(name) {
     case 'heal': [523, 659, 784].forEach((f, i) => tone(a, 'sine', f, f, 0.25, v * 0.35, t + i * 0.08)); break;
     case 'ko': tone(a, 'sawtooth', 320, 40, 0.9, v * 0.35, t); noise(a, 0.7, 700, 'lowpass', v, t + 0.05); break;
     case 'whoosh': noise(a, 0.35, 900, 'bandpass', v * 0.6, t); break;
+    case 'thud': noise(a, 0.12, 700, 'lowpass', v * 0.7, t); tone(a, 'sine', 130, 55, 0.14, v * 0.7, t); break;
+    case 'drumroll': for (let i = 0; i < 8; i++) noise(a, 0.05, 1100, 'lowpass', v * (0.25 + i * 0.04), t + i * 0.045); break;
     case 'fight': [392, 494, 587].forEach((f) => tone(a, 'sawtooth', f, f * 1.01, 0.5, v * 0.15, t)); break;
     case 'sad': [392, 370, 349].forEach((f, i) => tone(a, 'triangle', f, f, 0.35, v * 0.3, t + i * 0.3)); break;
     case 'win': [523, 659, 784, 1047].forEach((f, i) => tone(a, 'square', f, f, 0.22, v * 0.15, t + i * 0.12)); break;
@@ -315,6 +317,7 @@ FX.receive = function (payload) {
   settings(payload.settings);
   FX.texts = payload.texts || {};
   FX.assets = payload.assets || {};
+  if (FX.onReceive) FX.onReceive(payload);
   const fresh = (payload.cues || []).filter((c) => !FX.seen.has(c.id));
   fresh.forEach((c) => FX.seen.add(c.id));
   const targets = new Set();

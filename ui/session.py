@@ -7,6 +7,7 @@ from typing import Any
 
 import streamlit as st
 
+from finaltitan import dice, events as ev
 from finaltitan.catalog import Catalog, load_catalog
 from finaltitan.engine import apply, initial_state, reduce
 from finaltitan.events import Action, act
@@ -81,7 +82,7 @@ def text(m: Msg | str) -> str:
 
 def settings() -> GuidanceSettings:
     ss = st.session_state
-    return GuidanceSettings(level=ss.get("opt_level", "Expert"), lang=lang())
+    return GuidanceSettings(level=ss.get("opt_level", "Expert"), lang=lang(), dice=ss.get("opt_dice", "App"))
 
 
 def fx_settings() -> fx.FxSettings:
@@ -135,6 +136,19 @@ def dispatch(kind: str, **args: Any) -> None:
     ss.fx_queue = [c.to_dict() for c in cues]
     ss.fx_marks = fx.marks_for(cues, after.event_count)
     ss.fx_cursor = len(ss.events)
+
+
+def roll_enemy() -> None:
+    """The Roll button. In App mode the die is drawn here and stored in the event, so replay and undo stay exact;
+    in Table mode only an Action slot is filled."""
+    state = game()
+    if state is None or state.arena is None:
+        return
+    token = state.arena.statuses.blessed_cursed
+    if st.session_state.get("opt_dice", "App") == "Table":
+        dispatch(ev.ROLL, faces=[], token="none")
+    else:
+        dispatch(ev.ROLL, faces=dice.roll(1 if token == "none" else 2), token=token)
 
 
 def undo() -> None:

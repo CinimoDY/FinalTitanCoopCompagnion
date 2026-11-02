@@ -5,7 +5,7 @@ import random
 
 import streamlit as st
 
-from finaltitan import events as ev
+from finaltitan import dice, events as ev
 from finaltitan.guide import LEVELS, Guidance, guide
 from finaltitan.engine import FIGHT_END_REASONS
 from finaltitan.state import COUNT_TOKENS, GameState
@@ -88,6 +88,9 @@ def _hud(state: GameState) -> None:
         ss._fight_guidance = session.settings().level
         st.selectbox(tr("guidance.label"), LEVELS, key="_fight_guidance", format_func=lambda v: tr(f"opt.{v}"),
                      on_change=lambda: ss.update(opt_level=ss._fight_guidance, beginner_progress=None))
+        ss._fight_dice = session.settings().dice
+        st.selectbox(tr("dice.label"), ["App", "Table"], key="_fight_dice", format_func=lambda v: tr(f"opt.{v}"),
+                     help=tr("dice.help"), on_change=lambda: ss.update(opt_dice=ss._fight_dice))
         st.button(tr("menu.setup"), key="menu_setup", on_click=session.go, args=("setup",), width="stretch")
         st.button(tr("menu.draft"), key="menu_draft", on_click=session.go, args=("draft",), width="stretch")
         st.button(tr("menu.log"), key="menu_log", on_click=session.go, args=("log",), width="stretch")
@@ -163,6 +166,28 @@ def _upgrades(state: GameState, cat, marks) -> None:
 
 # --------------------------------------------------------------- caption box
 
+def _roll_panel(state: GameState) -> None:
+    """Enemy turn: the Action tracker, what the latest roll asks for, and the picks for a Blessed or Cursed roll."""
+    tr, lang = session.translator(), session.lang()
+    _md(view.roll_tracker_html(state, lang, session.settings().dice))
+    hint = dice.roll_hint(state)
+    last = state.turn_rolls[-1] if state.turn_rolls else None
+    # Expert mode drops the "what to do with this result" lines; the picks and the doubles prompt stay.
+    if hint is not None and (session.settings().level != "Expert" or not hint.key.startswith("roll.result_")):
+        st.markdown(session.text(hint))
+    if last is None or state.arena is None:
+        return
+    if last.pending:
+        with st.container(key="ft_roll_pick", horizontal=True):
+            for i, f in enumerate(last.faces):
+                st.button(tr("roll.pick_die", face=tr(f"die.{f}")), key=f"ft_pick_{i}_{f}", width="stretch",
+                          on_click=session.dispatch, args=(ev.ROLL_PICK,), kwargs={"index": i})
+    elif last.doubles and state.arena.statuses.blessed_cursed == last.token != "none":
+        st.button(tr("roll.remove_token", token=tr(f"token.{last.token}")), key="ft_remove_token", width="stretch",
+                  on_click=session.dispatch, args=(ev.TOKEN,),
+                  kwargs={"target": state.arena.card_id, "token": last.token, "delta": -1})
+
+
 def _guide_panel(state: GameState, g: Guidance, cat) -> None:
     tr = session.translator()
     portrait = view.card_src(cat, "titans", state.arena.card_id, "thumb", session.lang()) if state.arena else None
@@ -188,6 +213,7 @@ def _guide_panel(state: GameState, g: Guidance, cat) -> None:
         elif g.step == "enemy_turn" and state.arena is not None:
             if g.lines:
                 st.markdown("\n".join(f"{i}. {line}" for i, line in enumerate(g.lines[:3], 1)))
+            _roll_panel(state)
             for line in g.lines[3:]:
                 st.caption(line)
         else:
@@ -209,7 +235,11 @@ def _guide_panel(state: GameState, g: Guidance, cat) -> None:
         elif g.primary:
             with st.container(key="ft_guide_buttons", horizontal=True):
                 if g.step == "enemy_turn":
-                    st.button(tr("roll.button"), key="ft_enemy_roll", type="primary", width="stretch")
+                    done = state.arena is not None and len(state.turn_rolls) >= dice.slots(state)
+                    label = tr("roll.button_table") if session.settings().dice == "Table" else tr("roll.button")
+                    st.button(label, key="ft_enemy_roll_done" if done else "ft_enemy_roll", type="primary",
+                              on_click=session.roll_enemy, width="stretch",
+                              help=tr("roll.button_done") if done else None)
                 for i, p in enumerate(g.primary):
                     st.button(p.label, type="primary", key=f"primary_{g.step}_{i}",
                               on_click=session.dispatch, args=(p.kind,), kwargs=p.args, width="stretch")
@@ -332,5 +362,6 @@ def render() -> None:
             with st.container(key="ft_ticker", horizontal=True, vertical_alignment="center"):
                 _ticker(state)
     assets = {"titan_back": view.back_src(cat, "titans", session.lang()), "upgrade_back": view.back_src(cat, "upgrades")}
-    fx_layer(ss.fx_queue, fx_set, assets)
+    pending = bool(state.turn_rolls and state.turn_rolls[-1].pending)
+    fx_layer(ss.fx_queue, fx_set, {**assets, "dice": view.dice_srcs()}, {"pending_pick": pending})
 

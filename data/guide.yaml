@@ -76,21 +76,21 @@ steps:
     lines:
       en:
         - "Resolve any start-of-turn abilities on {enemy} and the enemy Upgrades."
-        - "Roll one die for the enemy for each of its Actions ({actions} this turn)."
-        - "Look each result up on {enemy}'s Attack Chart and resolve it against your Titan."
+        - "{roll_line}"
+        - "Resolve each result against your Titan with the glowing icon on {enemy}'s Attack Chart."
         - "{dice_line}"
         - "Rolled Charge? Flip the Charge token with the Charge switch below the enemy card and take another Action. If it was already flipped, resolve the Ultimate, then turn it back to gray."
         - "If a card makes the enemy decide, choose what is best for the enemy."
       de:
         - "Handelt Zugbeginn-Fähigkeiten von {enemy} und den gegnerischen Upgrades ab."
-        - "Würfelt für jede Aktion des Gegners einen Würfel ({actions} in diesem Zug)."
-        - "Schlagt jedes Ergebnis in den Angriffswerten von {enemy} nach und handelt es gegen euren Titan ab."
+        - "{roll_line}"
+        - "Handelt jedes Ergebnis gegen euren Titan ab, mit dem leuchtenden Symbol in den Angriffswerten von {enemy}."
         - "{dice_line}"
         - "Wut gewürfelt? Dreht den Wut-Token mit dem Schalter unter der Gegnerkarte um und führt eine weitere Aktion aus. War er schon umgedreht, handelt den Ultimate ab und stellt ihn dann wieder auf grau."
         - "Muss der Gegner laut einer Karte entscheiden, wählt das, was für den Gegner am besten ist."
     why:
-      en: "The app never rolls dice and does not need the result. You only enter what it has to track: Life, tokens, and Charge."
-      de: "Die App würfelt nie und braucht das Ergebnis nicht. Ihr gebt nur ein, was sie verfolgen muss: Lebenspunkte, Token und Wut."
+      en: "The app rolls the enemy's dice, shows the result, and points at it on the card. It never applies the result: you enter Life, tokens, and Charge with the controls."
+      de: "Die App würfelt für den Gegner, zeigt das Ergebnis und markiert es auf der Karte. Sie wendet es nie selbst an: Lebenspunkte, Token und Wut gebt ihr mit den Bedienelementen ein."
     primary: [[{en: "End enemy turn", de: "Gegnerzug beenden"}, "end_turn", {}]]
     refs: [[{en: "Co-op: Enemy-Team Clarifications", de: "Koop: Klarstellungen zum Gegnerteam"}, "design/final-titan-coop-rules.md"]]
   players_turn:

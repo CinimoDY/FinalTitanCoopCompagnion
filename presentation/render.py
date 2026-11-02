@@ -16,6 +16,7 @@ from typing import Any
 
 from PIL import Image, ImageDraw, ImageFont
 
+from finaltitan import dice
 from finaltitan.catalog import BASE_LANG, Catalog
 from finaltitan.i18n import DEFAULT, render, t
 from finaltitan.state import EnemyTitan, GameState
@@ -289,6 +290,48 @@ def hud_enemy_html(state: GameState, lang: str = DEFAULT) -> str:
              f'<span class="ft-stat" title="{esc(tr("hud.speed"))}"><i>{esc(tr("hud.spd"))}</i>{esc(spd)}</span>')
     role = tr(f"role.{state.enemy_role}").upper() if state.enemy_role else ""
     return template("hud_enemy").substitute(enemy_label=label, role=esc(role), name=esc(a.name), stats=stats)
+
+
+# --------------------------------------------------------------- enemy dice
+
+def dice_srcs() -> dict[str, str]:
+    """URLs of the die face images that exist (python -m presentation.build_dice makes them)."""
+    return {f.id: f"{URL}/dice/{f.id}.webp" for f in dice.faces() if (STATIC / "dice" / f"{f.id}.webp").exists()}
+
+
+def _chip(r, srcs: dict[str, str], tr, latest: bool) -> str:
+    cls = ["ft-chip"]
+    if latest:
+        cls.append("big new")
+    if not r.faces:
+        return f'<span class="{" ".join(cls)} table" title="{esc(tr("roll.table_done"))}">&#127922;</span>'
+    names = " + ".join(tr(f"die.{f}") for f in r.faces)
+    imgs = []
+    for i, f in enumerate(r.faces):
+        state = ""
+        if len(r.faces) == 2:
+            state = " kept" if r.pick == i else " dropped" if r.pick is not None else ""
+        src = srcs.get(f)
+        imgs.append(f'<img class="die-{esc(f)}{state}" src="{esc(src)}" alt="{esc(tr(f"die.{f}"))}">' if src
+                    else f'<b class="{state.strip()}">{esc(tr(f"die.{f}"))}</b>')
+    if len(r.faces) == 2:
+        cls.append("two " + r.token)
+    return f'<span class="{" ".join(cls)}" title="{esc(names)}">{"".join(imgs)}</span>'
+
+
+def roll_tracker_html(state: GameState, lang: str = DEFAULT, mode: str = "App") -> str:
+    """The enemy's Actions this turn: one chip per roll so far, a dashed slot for each Action still to roll."""
+    tr = _tr(lang)
+    rolls = state.turn_rolls
+    total = dice.slots(state)
+    done = len(rolls) >= total
+    head = tr("roll.button_done") if done else tr("roll.action_n", n=len(rolls) + 1, total=total)
+    srcs = dice_srcs()
+    chips = [_chip(r, srcs, tr, i == len(rolls) - 1) for i, r in enumerate(rolls)]
+    chips += ['<span class="ft-chip slot">?</span>'] * max(total - len(rolls), 0)
+    extra = f' <em>{esc(tr("roll.extra", n=len(rolls) - total))}</em>' if len(rolls) > total else ""
+    return (f'<div class="ft-tracker{" done" if done else ""}" data-mode="{esc(mode)}" data-fx-target="roll-tracker">'
+            f'<div class="ft-tr-head"><b>{esc(head)}</b>{extra}</div><div class="ft-tr-chips">{"".join(chips)}</div></div>')
 
 
 # ------------------------------------------------------------ caption, ticker

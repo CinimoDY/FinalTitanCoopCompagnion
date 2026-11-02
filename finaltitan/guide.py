@@ -19,6 +19,7 @@ LEVELS = ["Beginner", "Expert"]
 class GuidanceSettings:
     level: str = "Beginner"
     lang: str = DEFAULT
+    dice: str = "App"  # who rolls the enemy's dice: App | Table
 
 
 @dataclass
@@ -102,7 +103,7 @@ def _next_line(state: GameState, lang: str) -> str:
     return tr(key, lang, reveal=tr(reveal, lang))
 
 
-def _context(state: GameState, lang: str) -> dict[str, Any]:
+def _context(state: GameState, lang: str, dice: str = "App") -> dict[str, Any]:
     t = state.arena
     ctx: dict[str, Any] = {"left": state.player_titans_left, "total": state.player_titans_total}
     if state.result is not None:
@@ -115,9 +116,10 @@ def _context(state: GameState, lang: str) -> dict[str, Any]:
         actions = 1 + t.statuses.action
         ctx["actions"] = actions
         ctx["action_word"] = tr("word.action" if actions == 1 else "word.actions", lang)
+        ctx["roll_line"] = tr("guide.roll_table" if dice == "Table" else "guide.roll_app", lang, actions=actions)
         bc = t.statuses.blessed_cursed
         if bc in ("blessed", "cursed"):
-            ctx["dice_line"] = tr(f"guide.dice_{bc}", lang)
+            ctx["dice_line"] = tr(f"guide.dice_{bc}{'_table' if dice == 'Table' else ''}", lang)
     if state.phase == "cleanup":
         ctx["next_line"] = _next_line(state, lang)
     return ctx
@@ -147,7 +149,7 @@ def guide(state: GameState, settings: GuidanceSettings) -> Guidance:
     lang = settings.lang
     g = Guidance(step=step, actor_kind=kind, actor_label=tr(f"actor.{kind}", lang))
     g.primary = [PrimaryAction(text(label, lang), k, dict(args or {})) for label, k, args in spec.get("primary", [])]
-    ctx = _context(state, lang)
+    ctx = _context(state, lang, settings.dice)
 
     if settings.level == "Expert":
         short = _fmt(spec["short"], ctx, lang)

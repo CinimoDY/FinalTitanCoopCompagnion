@@ -2,7 +2,7 @@
 
 This is step 2 of the implementation. It assumes step 1 ([webapp-design.md](webapp-design.md)) is already running: a working Streamlit app with an event-sourced engine, the guide, and a plain `st.columns`/`st.image`/`st.dialog` interface.
 
-The app is an **enemy display**. It tracks only the enemy side; player Titans exist only as the count `player_titans_left`. All dice are rolled physically and **no die result is entered**. Every effect in this document therefore happens to an enemy card, the enemy Upgrade row, the queue, or the "Your Titans left" counter.
+The app is an **enemy display**. It tracks only the enemy side; player Titans exist only as the count `player_titans_left`. The app rolls the enemy's dice and shows the result, but **never applies it and never asks for a die result** (see [enemy-roll-design.md](enemy-roll-design.md)); the players' own dice stay physical. Every effect in this document therefore happens to an enemy card, the enemy Upgrade row, the queue, or the "Your Titans left" counter.
 
 Goal: the app should feel like a **comic-book fighting game**, not like a dashboard. The rules engine stays exactly as it is. Only the presentation layer changes.
 
@@ -435,8 +435,8 @@ class Cue:
 - The step 1 reveal dialog (`_reveal_dialog`) is replaced by the reveal cinematics; with the overlay unavailable it stays as the fallback.
 
 ### 5.7 Enemy turn and Charge
-All dice are rolled physically and no result is entered, so there is nothing to animate for the roll itself. The presentation instead makes the enemy turn feel like a fighting-game round.
-- **Waiting state:** During the `enemy_turn` guide step, the caption box shows "ROLL FOR THE ENEMY!" with a small bouncing die icon and the number of Actions (1 + Action tokens). The caption box gets a red halftone background on the enemy's turn, so it's clear the players are rolling for the enemy.
+The enemy's roll is animated (black reflective 3D die, Attack Chart icon glow, Action tracker); see [enemy-roll-design.md](enemy-roll-design.md). The rest of the enemy turn feels like a fighting-game round.
+- **Waiting state:** During the `enemy_turn` guide step, the caption box shows the Action tracker and the **Roll** button with a small bouncing die icon. The caption box gets a red halftone background on the enemy's turn, so it's clear the players are rolling for the enemy.
 - **Blessed or Cursed:** The badge shows two small dice and a label ("Blessed – ENEMY picks", "Cursed – YOU pick"). Removing the token plays **POOF!**.
 - **Charge token:** The "Charge flipped" toggle under the enemy card is restyled as a round two-sided token (gray face / glowing face). Switching it on plays **ZZAP!** (§3.1). While it is on, "ULTIMATE READY" pulses.
 - **Ultimate:** By convention, switching Charge off during the enemy's turn means the Ultimate fired (this is what the guide tells the players to do). It plays the Ultimate cinematic. Switching it off at any other time is treated as a correction and only reverse-flips the token.
@@ -496,7 +496,7 @@ The step 1 UI swaps `ui/components.py` helpers (`life_bar`, `token_badges`, `act
 
 ### Non-goals for step 2
 - No changes to rules, the engine, or the guide. Cues come from actions and state diffs only.
-- No die input, no player cards.
+- No input for the players' dice, no player cards.
 - No online multiplayer.
 - No WebGL or game engine. Everything is CSS, canvas 2D, and small vanilla JavaScript.
 

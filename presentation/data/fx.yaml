@@ -21,6 +21,10 @@ words:
     fight: "FIGHT!"
     retreat: "RETREAT!"
     slash: "SHING!"
+    roll: "ROLL!"
+    roll_charge: "CHARGE!"
+    miss: "MISS!"
+    doubles: "DOUBLES!"
   de:
     damage: {1: "PENG!", 2: "WUMMS!", 3: "KA-WUMM!"}
     whiff: "DANEBEN!"
@@ -36,6 +40,10 @@ words:
     fight: "KAMPF!"
     retreat: "RÜCKZUG!"
     slash: "SCHWING!"
+    roll: "WÜRFEL!"
+    roll_charge: "WUT!"
+    miss: "FEHLSCHLAG!"
+    doubles: "PASCH!"
 
 durations:          # milliseconds at 1x speed
   hit: 900
@@ -67,6 +75,9 @@ durations:          # milliseconds at 1x speed
   final_fight: 2000
   victory: 4000
   defeat: 4000
+  roll: 1500
+  roll_pick: 900
+  roll_glow: 600
 
 # Generic taunts from the enemy team; never card specific.
 taunts:
@@ -79,6 +90,8 @@ taunts:
     ultimate: ["Behold my true power!", "This ends now!"]
     player_lost: ["Next!", "Who's next?", "Another one falls!"]
     fight: ["Let's dance!", "You again?"]
+    roll_power: ["Feel my power!", "Here it comes!"]
+    roll_miss: ["...that was a warm-up.", "Just getting started."]
   de:
     whiff: ["Ist das alles?", "Daneben!", "Zu langsam!"]
     hit_small: ["Das kitzelt.", "Pah."]
@@ -88,3 +101,21 @@ taunts:
     ultimate: ["Seht meine wahre Macht!", "Jetzt ist Schluss!"]
     player_lost: ["Der Nächste!", "Wer ist der Nächste?", "Wieder einer weniger!"]
     fight: ["Auf in den Tanz!", "Ihr schon wieder?"]
+    roll_power: ["Spürt meine Kraft!", "Jetzt kommt's!"]
+    roll_miss: ["...das war nur das Aufwärmen.", "Ich fange ja erst an."]
+
+# The Attack Chart icons on a Titan card, as fractions of the card image width (y too, so it holds for every card
+# height): column centers left to right, the vertical center, and the radius of the icon.
+chart_icons:
+  x: [0.618, 0.7195, 0.823, 0.9265]
+  y: 0.6985
+  r: 0.0405
+
+# Bright outline color of the glow per die face.
+die_glow:
+  blue: "#4CC3FF"
+  green: "#46F28A"
+  yellow: "#FFE14D"
+  red: "#FF5964"
+  charge: "#FFD400"
+  miss: "#9A96A0"

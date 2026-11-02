@@ -19,6 +19,8 @@ SWAP = "swap"
 ADD_ENEMY_UPGRADE = "add_enemy_upgrade"
 NOTE = "note"
 ADVANCE_FIGHT = "advance_fight"
+ROLL = "roll"
+ROLL_PICK = "roll_pick"
 
 
 @dataclass

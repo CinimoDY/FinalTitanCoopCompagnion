@@ -9,7 +9,7 @@ The players handle their own side entirely with the physical game: their Titans,
 - which Titans the players drafted, so they are **excluded from the enemy deck**, and
 - how many player Titans are still alive, to detect defeat.
 
-**All dice are rolled physically**, including the enemy's rolls. The app never rolls dice and **never asks for die results**. Players roll for the enemy, look the result up on the enemy card, and resolve it. Only what the rules need to track (Life, tokens, Charge) is entered with the controls.
+**The app rolls the enemy's dice.** It shows the result and points at it on the enemy card, but it **never applies it**: the players resolve the result by hand and enter what the rules need to track (Life, tokens, Charge) with the controls. The players still roll their own dice physically. A setting **Enemy dice: App / Table** lets a group keep rolling the enemy's dice on the table; the app then only counts the Actions. See [enemy-roll-design.md](enemy-roll-design.md).
 
 ### In scope
 - The enemy side of every generic rule: queue order, Upgrade reveals, Charge/Ultimate, Status tokens, start-of-turn damage, the damage order for damage the enemy takes, fight clean-up, and win/loss detection.
@@ -98,16 +98,16 @@ Players draft physically. In the app they mark the **3 × players** Titans they 
 
 ### 4.1 Enemy turn
 1. **Start of turn:** Poison deals its tokens as damage; Fire deals its tokens, then +1 Fire. Ignores Armor, Dodge, Minion. Reminder: "resolve start-of-turn abilities on the enemy card".
-2. **Roll (physical):** any player rolls for the enemy, once per Action (1 + Action tokens), two dice when Blessed or Cursed (Blessed: pick the best die for the enemy; Cursed: the players pick). The result is **not entered** in the app.
-3. **Resolve:** players look the result up on the enemy Attack Chart and resolve it against their Titan.
-4. **Charge:** the players handle a Charge result with the **Charge toggle** next to the enemy card. Gray to flipped grants an extra Action; flipped means Ultimate, then the token goes back to gray.
+2. **Roll (app):** a player presses **Roll** once per Action (1 + Action tokens, +1 for each Charge flip this turn). The app throws one die, or two when Blessed or Cursed (Blessed: the players pick the best die for the enemy; Cursed: the players pick the die that counts). The roll is stored as an event, so undo and the log work.
+3. **Resolve:** the matching Attack Chart icon on the enemy card glows for a few seconds. The players resolve the result against their Titan. The app changes no Life, token or Charge by itself.
+4. **Charge:** on a Charge result the app only points at the **Charge toggle** next to the enemy card. The players flip it: gray to flipped grants an extra Action; flipped means Ultimate, then the token goes back to gray. On doubles with Blessed or Cursed, a button removes the token.
 5. **End turn** with one button.
 
 ### 4.2 Players' turn
 The players play their turn physically. The app shows "Your turn" and the enemy's defenses (Armor, Dodge, Minion). Anything that hits the enemy is entered with the controls. "End our turn" hands over to the enemy.
 
-### 4.3 No die input
-There is no roll pad and no die configuration.
+### 4.3 Dice
+The enemy die has six faces, defined in `data/dice.yaml`: Blue, Green, Yellow and Red (Attack Chart columns 1–4), Charge and Miss. There is still no input for the **players'** dice and no die configuration.
 
 ### 4.4 Damage to the enemy
 Quick buttons (1–6) and a detailed form. Order:
@@ -134,7 +134,7 @@ Always visible in the middle of the screen: an actor badge (**ENEMY** in red, **
 - **Setup:** "Deal 4 Upgrade cards to each player. Resolve Start of Game abilities."
 - **Fight start, enemy Champion:** "Decide which player sends a Titan as Challenger. Play Upgrades face down, reveal, resolve When Revealed and Start of Fight (enemy Upgrades included). Who starts?"
 - **Fight start, enemy Challenger:** "[Enemy] challenges your Champion. …"
-- **Enemy turn:** "Start the enemy's turn" → "Roll for the enemy and resolve the result on its card. Flip Charge when you roll Charge." → "End the enemy's turn".
+- **Enemy turn:** "Start the enemy's turn" → "Press Roll for the enemy and resolve the result on its card. Flip Charge when you roll Charge." → "End the enemy's turn".
 - **Players' turn:** "Your turn. Enter everything that affects the enemy." → "End your turn".
 - **Clean-up:** names the winner, the reward ("draw 1 Upgrade", Legendary), and what is revealed next.
 

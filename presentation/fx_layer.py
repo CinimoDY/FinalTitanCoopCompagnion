@@ -16,7 +16,7 @@ from presentation import fx
 from presentation.fx import FxSettings
 
 ASSETS = Path(__file__).resolve().parent / "assets"
-ENGINE_FILES = ("fx.js", "motion.js", "destroy.js", "cinematics.js")
+ENGINE_FILES = ("fx.js", "motion.js", "destroy.js", "cinematics.js", "dice.js")
 
 BOOT = """<script>
 (function () {
@@ -60,13 +60,15 @@ def texts(lang: str) -> dict[str, str]:
     return out
 
 
-def payload_html(cues: list[dict[str, Any]], settings: FxSettings, assets: dict[str, str | None]) -> str:
+def payload_html(cues: list[dict[str, Any]], settings: FxSettings, assets: dict[str, Any],
+                 extra: dict[str, Any] | None = None) -> str:
     version, code = engine()
     payload = {"engine": version, "cues": cues, "settings": settings.to_dict(), "assets": assets,
-               "texts": texts(settings.lang)}
+               "texts": texts(settings.lang), "extra": extra or {}}
     return BOOT.replace("__ENGINE__", _json(code)).replace("__PAYLOAD__", _json(payload))
 
 
-def fx_layer(cues: list[dict[str, Any]], settings: FxSettings, assets: dict[str, str | None]) -> None:
+def fx_layer(cues: list[dict[str, Any]], settings: FxSettings, assets: dict[str, Any],
+             extra: dict[str, Any] | None = None) -> None:
     with st.container(key="ft_fxhost"):
-        st.iframe(payload_html(cues, settings, assets), height="content")
+        st.iframe(payload_html(cues, settings, assets, extra), height="content")

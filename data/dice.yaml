@@ -1,0 +1,9 @@
+# The enemy die: six faces, one of each. Colored faces point at an Attack Chart column (0 = leftmost).
+# The face images live in static/dice/<id>.webp (python -m presentation.build_dice).
+faces:
+  - {id: blue, kind: chart, column: 0}
+  - {id: green, kind: chart, column: 1}
+  - {id: yellow, kind: chart, column: 2}
+  - {id: red, kind: chart, column: 3}
+  - {id: charge, kind: charge}
+  - {id: miss, kind: miss}

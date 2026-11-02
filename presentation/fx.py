@@ -12,7 +12,7 @@ from typing import Any
 
 import yaml
 
-from finaltitan import events as ev
+from finaltitan import dice, events as ev
 from finaltitan.combat import damage_pipeline
 from finaltitan.engine import apply
 from finaltitan.events import Action
@@ -198,6 +198,52 @@ def _token_cues(b: _Builder, before_t: EnemyTitan, after_t: EnemyTitan, where: s
             b.add("token", target, token=new_bc, delta=1, value=1, where=where)
 
 
+def _glow_cue(b: _Builder, target: str, face_id: str, state: GameState, lang: str = DEFAULT, **extra: Any) -> None:
+    """Rolled face -> the Attack Chart icon to light up, or the Charge/Miss hint."""
+    f = dice.face(face_id)
+    if f is None:
+        return
+    icons = config()["chart_icons"]
+    t = state.arena
+    params: dict[str, Any] = {"face": face_id, "color": config()["die_glow"][face_id], **extra}
+    if f.kind == "chart" and f.column is not None:
+        params["icon"] = {"x": icons["x"][f.column], "y": icons["y"], "r": icons["r"]}
+    if f.kind == "charge" and t is not None:
+        params["ultimate"] = t.charged
+    if f.kind in ("charge", "miss"):
+        params["word"] = _word("roll_charge" if f.kind == "charge" else "miss", lang)
+    b.add("roll_glow", target, **params)
+
+
+def roll_cues(b: _Builder, action: Action, before: GameState, after: GameState, lang: str) -> None:
+    """The enemy die: throw, result, and the icon glow (§3 A-E of design/enemy-roll-design.md)."""
+    at = after.arena
+    if at is None or not after.turn_rolls:
+        return
+    target = card_target(at.card_id)
+    n = after.event_count
+    if action.kind == ev.ROLL:
+        if len(after.turn_rolls) == len(before.turn_rolls):
+            return  # ignored
+        r = after.turn_rolls[-1]
+        result = r.result
+        taunt_kind = None
+        if result:
+            f = dice.face(result)
+            taunt_kind = "roll_miss" if f and f.kind == "miss" else "roll_power" if f and (f.kind == "charge" or result == "red") else None
+        b.add("roll", target, faces=r.faces, token=r.token, doubles=r.doubles, pending=r.pending,
+              charged=at.charged, word=_word("roll", lang), color=config()["die_glow"].get(result or "", "#FFD400"), doubles_word=_word("doubles", lang) if r.doubles else None,
+              taunt=taunt(taunt_kind, n, lang) if taunt_kind else None, index=len(after.turn_rolls))
+        if result:
+            _glow_cue(b, target, result, after, lang)
+    elif action.kind == ev.ROLL_PICK:
+        last, prev = after.turn_rolls[-1], before.turn_rolls[-1] if before.turn_rolls else None
+        if prev is None or not prev.pending or last.pick is None:
+            return
+        b.add("roll_pick", target, faces=last.faces, token=last.token, pick=last.pick)
+        _glow_cue(b, target, last.faces[last.pick], after, lang)
+
+
 def cues_for(
     action: Action,
     before: GameState,
@@ -259,6 +305,9 @@ def cues_for(
             b.add("whiff", target, word=_word("whiff", lang), taunt=taunt("whiff", n, lang))
     elif kind in (ev.HEAL, ev.LIFE_ADJUST) and bt is not None:
         _life_change(b, bt, _life_after(bt, after), None, n, lang)
+
+    if kind in (ev.ROLL, ev.ROLL_PICK):
+        roll_cues(b, action, before, after, lang)
 
     # Token changes.
     if kind == ev.TOKEN:

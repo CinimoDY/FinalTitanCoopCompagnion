@@ -268,7 +268,8 @@ div[class*="_lang_"][class*="_on"] .ft-flag-name { color: var(--ft-yellow); }
 .st-key-ft_caption > :has(> .st-key-ft_guide_actions) { flex: none !important; margin-top: auto; }
 /* Expert mode: the caption box hugs its content instead of filling the column. */
 .st-key-ft_left > .st-key-ft_caption:has(.ft-expert), .st-key-ft_left > :has(> .st-key-ft_caption .ft-expert) { flex: none !important; }
-.st-key-ft_screen .st-key-ft_caption:has(.ft-expert) { height: auto !important; }
+.st-key-ft_screen .st-key-ft_caption:has(.ft-expert) { height: auto !important; min-height: 247px; }
+/* The enemy turn's box (Action tracker) sets the size, so the box keeps it on the players' turn and in other steps. */
 .st-key-ft_caption:has(.ft-expert) > :has(> .st-key-ft_guide_content) { flex: none !important; }
 .st-key-ft_caption:has(.ft-expert) .st-key-ft_guide_content { height: auto !important; padding-bottom: 12px; }
 [class*="st-key-ft_guide_"] [data-testid="stElementContainer"]:has(.ft-expert, .ft-roll, .ft-slot) { display: none !important; }
@@ -298,7 +299,45 @@ div[class*="_lang_"][class*="_on"] .ft-flag-name { color: var(--ft-yellow); }
 .ft-actor.players { background: var(--ft-cyan); color: #001 !important; }
 .ft-actor.all { background: #5c6773; color: #fff !important; }
 .ft-actor b { color: inherit !important; }
-.st-key-ft_enemy_roll button p::before { content: "\1F3B2"; display: inline-block; margin-right: .4em; animation: ft-die 1s infinite; }
+[class*="st-key-ft_enemy_roll"] button p::before { content: "\1F3B2"; display: inline-block; margin-right: .4em; animation: ft-die 1s infinite; }
+/* All Actions rolled: the Roll button turns gray, End enemy turn takes over (it stays usable for extra rolls). */
+.st-key-ft_enemy_roll_done [data-testid="stButton"] button[kind="primary"] { background: #4a4a52 !important; box-shadow: 4px 4px 0 #222 !important; }
+.st-key-ft_enemy_roll_done [data-testid="stButton"] button[kind="primary"] p { color: #d6d6dc !important; }
+.st-key-ft_enemy_roll_done button p::before { animation: none; opacity: .5; }
+.st-key-ft_guide_buttons:has(.st-key-ft_enemy_roll_done) > :nth-child(2) button { animation: ft-end-pulse 1.1s ease-in-out infinite; }
+@keyframes ft-end-pulse { 50% { box-shadow: 4px 4px 0 #6b5900, 0 0 0 4px var(--ft-yellow), 0 0 22px var(--ft-yellow); } }
+
+/* Enemy dice: Action tracker in the caption box */
+.ft-tracker { display: flex; flex-direction: column; gap: 6px; margin: 2px 0 4px; }
+.ft-tr-head { font-family: var(--ft-head); letter-spacing: .08em; font-size: 1.15rem; }
+.ft-tr-head b { font-weight: 400; color: inherit !important; }
+.ft-tr-head em { font-style: normal; font-size: .85em; opacity: .8; margin-left: .5em; }
+.ft-tr-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 44px; }
+.ft-chip { display: inline-flex; align-items: center; justify-content: center; gap: 3px; width: 42px; height: 42px; border-radius: 50%; overflow: hidden;
+  background: #0b0b10; border: 3px solid #000; box-shadow: 2px 2px 0 #000; font-family: var(--ft-head); color: #fff; font-size: 1rem; }
+.ft-chip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ft-chip.big { width: 62px; height: 62px; box-shadow: 3px 3px 0 #000, 0 0 0 3px var(--ft-yellow); }
+.ft-chip.big.new { animation: ft-pop .45s cubic-bezier(.34, 1.8, .64, 1); }
+.ft-chip.slot { background: transparent; border: 3px dashed rgba(255,255,255,.7); box-shadow: none; opacity: .9; }
+.ft-chip.table { background: #222; font-size: 1.3rem; }
+.ft-chip.two { width: auto; border-radius: 999px; padding: 0 3px; background: #0b0b10; }
+.ft-chip.two img { width: 32px; height: 32px; border-radius: 50%; }
+.ft-chip.big.two img { width: 50px; height: 50px; }
+.ft-chip.two.blessed { border-color: #FFC300; } .ft-chip.two.cursed { border-color: #9D4EDD; }
+.ft-chip img.kept { box-shadow: 0 0 0 3px var(--ft-yellow); }
+.ft-chip img.dropped { filter: grayscale(1) brightness(.6); opacity: .55; }
+.st-key-ft_roll_pick { gap: 8px !important; }
+[class*="st-key-ft_pick_"] button, .st-key-ft_remove_token button { font-family: var(--ft-head); letter-spacing: .05em; }
+[class*="st-key-ft_pick_"] button { background-repeat: no-repeat !important; background-position: 10px center !important; background-size: 34px !important; padding-left: 52px !important; min-height: 50px; }
+[class*="st-key-ft_pick_"][class*="_blue"] button { background-image: url("app/static/dice/blue.webp") !important; }
+[class*="st-key-ft_pick_"][class*="_green"] button { background-image: url("app/static/dice/green.webp") !important; }
+[class*="st-key-ft_pick_"][class*="_yellow"] button { background-image: url("app/static/dice/yellow.webp") !important; }
+[class*="st-key-ft_pick_"][class*="_red"] button { background-image: url("app/static/dice/red.webp") !important; }
+[class*="st-key-ft_pick_"][class*="_charge"] button { background-image: url("app/static/dice/charge.webp") !important; }
+[class*="st-key-ft_pick_"][class*="_miss"] button { background-image: url("app/static/dice/miss.webp") !important; }
+.st-key-ft_charge_row.ft-roll-pulse { border-radius: 12px; animation: ft-roll-pulse .55s ease-in-out 6; }
+@keyframes ft-roll-pulse { 50% { box-shadow: 0 0 0 3px var(--ft-yellow), 0 0 26px 6px var(--ft-yellow); } }
+body.ft-reduced .st-key-ft_charge_row.ft-roll-pulse { animation: none; box-shadow: 0 0 0 3px var(--ft-yellow); }
 .ft-combo-chip { font-family: var(--ft-num); background: #000; color: var(--ft-yellow) !important; padding: 1px 8px; border-radius: 4px; }
 
 /* Command pad */
@@ -544,3 +583,41 @@ div[class*="_lang_"][class*="_on"] .ft-flag-name { color: var(--ft-yellow); }
   .ft-bubble-in, .ft-bubble-text .w, .st-key-setup_guidance [data-baseweb="select"] > div { animation: none !important; }
   .ft-bubble { animation: ft-bubble-appear .3s linear var(--ft-open) backwards, ft-bubble-vanish .3s linear calc(var(--ft-open) + var(--ft-hold)) forwards !important; }
 }
+
+/* ============================================================ Enemy die (FX overlay) */
+.ft-die-pos { position: fixed; z-index: 8; pointer-events: none; perspective: 720px; }
+.ft-die-pos.resting { pointer-events: auto; cursor: pointer; animation: ft-die-bob 1.3s ease-in-out infinite; }
+.ft-die-pos.resting:hover { filter: drop-shadow(0 0 16px #fff); }
+.ft-die-pop, .ft-die-fly, .ft-die-tilt, .ft-die-cube { position: absolute; inset: 0; transform-style: preserve-3d; }
+.ft-die-tilt { transform: rotateX(-16deg) rotateY(18deg); }
+.ft-die-face { position: absolute; inset: 0; border-radius: 17%; overflow: hidden; backface-visibility: hidden;
+  background: radial-gradient(120% 90% at 28% 16%, #3d3d4a 0%, #15151c 42%, #07070a 100%);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.09), inset 0 -10px 18px rgba(0,0,0,.9), inset 0 7px 12px rgba(255,255,255,.12); }
+.ft-die-face img { position: absolute; left: 13%; top: 13%; width: 74%; height: 74%; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,.85)); }
+.ft-die-face .sheen { position: absolute; inset: -20% -40%; pointer-events: none;
+  background: linear-gradient(112deg, transparent 38%, rgba(255,255,255,.32) 47%, rgba(255,255,255,.07) 53%, transparent 60%); }
+.ft-die-face.s-front { transform: translateZ(calc(var(--s) / 2)); }
+.ft-die-face.s-back { transform: rotateY(180deg) translateZ(calc(var(--s) / 2)); }
+.ft-die-face.s-right { transform: rotateY(90deg) translateZ(calc(var(--s) / 2)); }
+.ft-die-face.s-left { transform: rotateY(-90deg) translateZ(calc(var(--s) / 2)); }
+.ft-die-face.s-top { transform: rotateX(90deg) translateZ(calc(var(--s) / 2)); }
+.ft-die-face.s-bottom { transform: rotateX(-90deg) translateZ(calc(var(--s) / 2)); }
+.ft-die-tile { position: absolute; inset: 0; border-radius: 18%; background: radial-gradient(120% 90% at 28% 16%, #3d3d4a, #15151c 45%, #07070a); border: 3px solid #000;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,.12), 3px 3px 0 #000; }
+.ft-die-tile img { position: absolute; left: 13%; top: 13%; width: 74%; height: 74%; object-fit: contain; }
+.ft-die-shadow { position: absolute; left: 4%; right: 4%; bottom: -16%; height: 24%; border-radius: 50%; pointer-events: none; opacity: 0;
+  background: radial-gradient(ellipse at 50% 40%, rgba(0,0,0,.7), transparent 70%), radial-gradient(ellipse at 50% 110%, rgba(255,255,255,.14), transparent 70%); }
+/* Blessed: gold rim and halo. Cursed: purple rim and cracks. */
+.ft-die-pos.blessed::before { content: ""; position: absolute; inset: -38%; border-radius: 50%; z-index: -1; pointer-events: none;
+  background: radial-gradient(circle, rgba(255,195,0,.55), transparent 62%); animation: ft-halo 1.1s ease-in-out infinite alternate; }
+.ft-die-pos.blessed .ft-die-face, .ft-die-pos.blessed .ft-die-tile { box-shadow: inset 0 0 0 3px #FFC300, inset 0 0 22px rgba(255,195,0,.5), inset 0 -10px 18px rgba(0,0,0,.9); }
+.ft-die-pos.cursed .ft-die-face, .ft-die-pos.cursed .ft-die-tile { box-shadow: inset 0 0 0 3px #9D4EDD, inset 0 0 22px rgba(157,78,221,.55), inset 0 -10px 18px rgba(0,0,0,.9); }
+.ft-die-face .crack { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: #c58bff; stroke-width: 1.6; opacity: .85; pointer-events: none; }
+.ft-die-burst { position: fixed; z-index: 7; pointer-events: none; background: var(--burst, #FFD400); opacity: 0;
+  clip-path: polygon(50% 0, 61% 30%, 95% 12%, 72% 42%, 100% 55%, 68% 63%, 82% 98%, 52% 74%, 24% 100%, 33% 66%, 0 72%, 26% 48%, 4% 20%, 38% 32%); }
+/* The Attack Chart icon the die points at: a bright outline glow on that one icon. */
+.ft-fx-iconglow { position: fixed; z-index: 5; border-radius: 50%; pointer-events: none; border: 3px solid #fff;
+  box-shadow: 0 0 0 3px var(--glow), 0 0 12px 3px var(--glow), 0 0 30px 9px var(--glow), inset 0 0 16px 3px var(--glow); }
+@keyframes ft-die-bob { 50% { transform: translateY(-8px); } }
+@keyframes ft-halo { from { opacity: .55; transform: scale(.92); } to { opacity: 1; transform: scale(1.08); } }
+body.ft-reduced .ft-die-pos.resting { animation: none; }

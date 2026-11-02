@@ -50,6 +50,32 @@ class EnemyTitan:
 
 
 @dataclass
+class Roll:
+    """One enemy Action's roll. Two faces when Blessed or Cursed; `pick` is the die that counts, None until chosen.
+    An empty `faces` list is a roll made on the table: it only fills an Action slot."""
+    faces: list[str] = field(default_factory=list)
+    token: Literal["none", "blessed", "cursed"] = "none"
+    pick: int | None = None
+
+    @property
+    def doubles(self) -> bool:
+        return len(self.faces) == 2 and self.faces[0] == self.faces[1]
+
+    @property
+    def result(self) -> str | None:
+        """The face that counts, or None while the players still have to choose or when nothing was rolled."""
+        if not self.faces:
+            return None
+        if self.pick is not None and self.pick < len(self.faces):
+            return self.faces[self.pick]
+        return self.faces[0] if len(self.faces) == 1 or self.doubles else None
+
+    @property
+    def pending(self) -> bool:
+        return len(self.faces) == 2 and not self.doubles and self.pick is None
+
+
+@dataclass
 class FightResult:
     reason: str  # enemy_defeated | player_defeated | both_defeated | enemy_returned | player_returned
     winner: Side | None
@@ -89,6 +115,8 @@ class GameState:
     active_side: Side | None = None
     turn_started: bool = False
     turn_no: int = 0
+    turn_rolls: list[Roll] = field(default_factory=list)  # the enemy's rolls this turn
+    turn_extra_actions: int = 0  # Actions gained this turn by flipping Charge
     fight_no: int = 1
     result: FightResult | None = None
     log: list[LogEntry] = field(default_factory=list)
