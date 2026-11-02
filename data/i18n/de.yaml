@@ -15,6 +15,8 @@ common.no_image: "(kein Bild)"
 common.load: "Laden"
 common.save_file: "Spielstand (JSON)"
 guidance.label: "Anleitungsstufe"
+guidance.hint_title: "Neu bei Final Titan?"
+guidance.hint: "Stell hier <b>Einsteiger</b> ein, dann wird dir das Spiel Schritt für Schritt erklärt. Du kannst das jederzeit ändern!"
 
 # ------------------------------------------------------------------ option values
 opt.Easy: "Leicht"

@@ -492,3 +492,55 @@ div[class*="_lang_"][class*="_on"] .ft-flag-name { color: var(--ft-yellow); }
 @keyframes ft-screen-shake { 25% { transform: translate(-4px, 3px); } 50% { transform: translate(4px, -3px); } 75% { transform: translate(-2px, 2px); } }
 @keyframes ft-screen-shake-big { 10% { transform: translate(-12px, 8px) rotate(-.5deg); } 30% { transform: translate(10px, -10px) rotate(.5deg); } 50% { transform: translate(-8px, 6px); } 70% { transform: translate(5px, -4px); } 90% { transform: translate(-2px, 2px); } }
 @keyframes ft-spin { to { transform: rotate(360deg); } }
+
+/* Setup: speech balloon pointing at the Guidance level select. Outer = entrance, inner = idle nudge, words pop in. */
+.st-key-setup_guidance { --ft-open: 4s; --ft-hold: 5s; }  /* appears after --ft-open, closes again after --ft-hold */
+.ft-bubble {
+  --ft-tip-x: -39px; --ft-tip-y: calc(50% + 27px);
+  position: relative; margin: 8px 6px 8px 44px; max-width: 34rem;
+  transform: rotate(-1.5deg); transform-origin: var(--ft-tip-x) var(--ft-tip-y);
+  filter: drop-shadow(4px 5px 0 #000);
+  animation: ft-bubble-pop .6s cubic-bezier(.25, 1.5, .5, 1) var(--ft-open) backwards,
+             ft-bubble-close .45s ease-in calc(var(--ft-open) + var(--ft-hold)) forwards;
+}
+.ft-bubble-in { position: relative; transform-origin: var(--ft-tip-x) var(--ft-tip-y); animation: ft-bubble-nudge 1s ease-in-out calc(var(--ft-open) + 2.2s) backwards; }
+.ft-bubble-body { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.ft-bubble-body path { fill: #FFFDF4; stroke: #000; stroke-width: 3px; }
+.ft-bubble-tail { position: absolute; left: -40px; top: calc(50% - 4px); width: 42px; height: 34px; overflow: visible; }
+.ft-bubble-text {
+  position: relative; padding: 16px 30px 18px; text-align: center; color: #111;
+  font-family: var(--ft-body); font-weight: 700; font-size: .98rem; line-height: 1.22; text-transform: uppercase; letter-spacing: .02em;
+}
+.ft-bubble-title { font-family: var(--ft-head); font-weight: 400; font-size: 1.45rem; line-height: 1.05; letter-spacing: .05em; color: var(--ft-red); -webkit-text-stroke: .6px #000; margin-bottom: 4px; }
+.ft-bubble-text b { font-weight: 700; font-style: italic; color: #000; box-shadow: inset 0 -.45em 0 var(--ft-yellow); }
+.ft-bubble-text .w { display: inline-block; animation: ft-word-pop .32s cubic-bezier(.3, 1.8, .5, 1) calc(var(--ft-open) + .35s + var(--i) * 45ms) backwards; }
+.st-key-setup_guidance [data-baseweb="select"] > div { animation: ft-bubble-glow 1s ease-out var(--ft-open), ft-bubble-glow 1s ease-out calc(var(--ft-open) + 2.2s); }
+@keyframes ft-bubble-pop {
+  0% { transform: scale(.05) rotate(-14deg); opacity: 0; }
+  45% { transform: scale(1.1, .9) rotate(1deg); opacity: 1; }
+  70% { transform: scale(.96, 1.05) rotate(-2.5deg); }
+  100% { transform: rotate(-1.5deg); }
+}
+@keyframes ft-word-pop { from { transform: translateY(5px) scale(.3); opacity: 0; } }
+@keyframes ft-bubble-nudge {
+  0%, 100% { transform: none; }
+  25% { transform: translate(-7px, 2px) rotate(-2deg) scale(1.03); }
+  45% { transform: translate(1px, 0) rotate(.5deg); }
+  65% { transform: translate(-5px, 1px) rotate(-1.5deg) scale(1.02); }
+}
+@keyframes ft-bubble-close {
+  0% { transform: rotate(-1.5deg); }
+  30% { transform: scale(1.08) rotate(-1.5deg); opacity: 1; }
+  100% { transform: scale(.05) rotate(10deg); opacity: 0; visibility: hidden; }
+}
+@keyframes ft-bubble-appear { from { opacity: 0; } }
+@keyframes ft-bubble-vanish { to { opacity: 0; visibility: hidden; } }
+@keyframes ft-bubble-glow { 0% { box-shadow: 0 0 0 0 var(--ft-yellow); } 40% { box-shadow: 0 0 0 3px var(--ft-yellow), 0 0 24px 6px var(--ft-yellow); } 100% { box-shadow: 0 0 0 0 transparent; } }
+@media (max-width: 640px) {  /* columns stack: the tail points up at the select */
+  .ft-bubble { --ft-tip-x: 32px; --ft-tip-y: -38px; margin: 42px 0 8px; }
+  .ft-bubble-tail { left: 29px; top: -36px; transform: rotate(90deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ft-bubble-in, .ft-bubble-text .w, .st-key-setup_guidance [data-baseweb="select"] > div { animation: none !important; }
+  .ft-bubble { animation: ft-bubble-appear .3s linear var(--ft-open) backwards, ft-bubble-vanish .3s linear calc(var(--ft-open) + var(--ft-hold)) forwards !important; }
+}

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import html
+import re
 
 import streamlit as st
 
@@ -33,6 +34,39 @@ def card_image(path, width: int = 700, gray: bool = False, arrow: bool = False) 
     if arrow:
         st.markdown(TAKEN_ARROW, unsafe_allow_html=True)
 
+
+
+# Speech balloon: a stretchable outline plus a fixed-size tail whose fill covers the outline where they join.
+_BUBBLE_BODY = "M50,0 C84,-1 100,9 100,50 C100,91 84,101 50,100 C16,101 0,91 0,50 C0,9 16,-1 50,0 Z"
+_BUBBLE_TAIL = (
+    '<svg class="ft-bubble-tail" viewBox="0 0 42 34" aria-hidden="true">'
+    '<path d="M47,0 C31,12 15,24 1,32 C17,31 33,28 47,25 Z" fill="#FFFDF4"/>'
+    '<path d="M40,4.5 C29,13 15,24 1,32 C17,31 30,28.5 40,26" fill="none" stroke="#000" stroke-width="3" '
+    'stroke-linejoin="round" stroke-linecap="round"/></svg>'
+)
+
+
+def _pop_words(text: str, start: int = 0) -> str:
+    """Wraps each word in a span numbered for the staggered pop-in; <b>...</b> runs stay bold."""
+    out = []
+    for i, part in enumerate(re.split(r"<b>(.*?)</b>", text)):
+        for word in part.split():
+            span = f'<span class="w" style="--i:{start}">{word}</span>'
+            out.append(f"<b>{span}</b>" if i % 2 else span)
+            start += 1
+    return " ".join(out)
+
+
+def speech_bubble(title: str, body: str) -> None:
+    title_words = len(title.split())
+    st.markdown(
+        '<div class="ft-bubble" role="note"><div class="ft-bubble-in">'
+        f'<svg class="ft-bubble-body" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">'
+        f'<path d="{_BUBBLE_BODY}" vector-effect="non-scaling-stroke"/></svg>{_BUBBLE_TAIL}'
+        f'<div class="ft-bubble-text"><div class="ft-bubble-title">{_pop_words(html.escape(title))}</div>'
+        f'{_pop_words(body, title_words)}</div></div></div>',
+        unsafe_allow_html=True,
+    )
 
 # Comic flags: a waving outline with an offset ink shadow and a thick black stroke. The bands follow the wave.
 _WAVE = "M6,10 C36,0 66,20 114,8 L114,71 C66,83 36,63 6,73 Z"

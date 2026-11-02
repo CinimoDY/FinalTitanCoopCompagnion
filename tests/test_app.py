@@ -7,6 +7,11 @@ from streamlit.testing.v1 import AppTest
 ROOT = str(Path(__file__).resolve().parent.parent)
 
 
+def prepared_beginner(at):
+    prepared(at)
+    at.session_state["opt_level"] = "Beginner"
+
+
 def run_page(page: str, pre=None, timeout=60):
     code = (
         "import sys\n"
@@ -83,18 +88,27 @@ def test_setup_guidance_survives_navigation_to_draft_and_back():
     at = AppTest.from_string(code, default_timeout=60).run()
     assert not at.exception, at.exception
     guidance = next(item for item in at.selectbox if item.label == "Guidance level")
-    assert guidance.value == "Beginner"
-    guidance.select("Expert").run()
+    assert guidance.value == "Expert"
+    guidance.select("Beginner").run()
     next(button for button in at.button if button.label == "Continue to draft").click().run()
     at.run()
     assert not at.exception, at.exception
     assert not any(item.label == "Guidance level" for item in at.selectbox)
-    assert at.session_state["opt_level"] == "Expert"
+    assert at.session_state["opt_level"] == "Beginner"
 
     at.session_state["stage"] = "setup"
     at.run()
     assert not at.exception, at.exception
+    assert next(item for item in at.selectbox if item.label == "Guidance level").value == "Beginner"
+
+
+def test_setup_defaults_to_expert_with_hint_bubble_until_beginner_is_picked():
+    at = run_page("setup_page")
+    assert not at.exception, at.exception
     assert next(item for item in at.selectbox if item.label == "Guidance level").value == "Expert"
+    assert any("ft-bubble" in entry.value for entry in at.markdown)
+    next(item for item in at.selectbox if item.label == "Guidance level").select("Beginner").run()
+    assert not any("ft-bubble" in entry.value for entry in at.markdown)
 
 
 @pytest.mark.parametrize("expansions", [["Base Set", "Advanced Set"], ["Base Set"], ["Advanced Set"]])
@@ -159,7 +173,7 @@ def test_draft_cards_toggle_once():
 
 
 def test_arena_full_flow_without_die_buttons():
-    at = run_page("arena_page", prepared)
+    at = run_page("arena_page", prepared_beginner)
     assert not at.exception, at.exception
     _click(at, "beginner_setup_0")
     _click(at, "beginner_setup_1")
@@ -179,7 +193,7 @@ def test_arena_full_flow_without_die_buttons():
 
 @pytest.mark.parametrize("reason", ["enemy_defeated", "player_defeated", "both_defeated", "enemy_returned", "player_returned"])
 def test_beginner_steps_work_in_the_next_fight(reason):
-    at = run_page("arena_page", prepared)
+    at = run_page("arena_page", prepared_beginner)
     for key in ["beginner_setup_0", "beginner_setup_1", "primary_setup_0", "beginner_fight_start_champion_0",
                 "beginner_fight_start_champion_1", "beginner_fight_start_champion_2", "primary_fight_start_champion_0",
                 f"end_{reason}", f"primary_cleanup_{reason}"]:
@@ -229,7 +243,7 @@ def test_actions_queue_cues_and_undo_never_replays_them():
 
 
 def test_beginner_setup_shows_one_confirmed_step_at_a_time():
-    at = run_page("arena_page", prepared)
+    at = run_page("arena_page", prepared_beginner)
     assert not at.exception, at.exception
     assert any("Shuffle the physical Upgrade deck" in item.value for item in at.markdown)
     assert not any("Place your drafted Titans" in item.value for item in at.markdown)
@@ -322,7 +336,7 @@ def test_language_comes_from_the_url_when_chosen_before():
 
     at = run_page("setup_page", pre)
     assert at.session_state["lang"] == "de"
-    assert next(item for item in at.selectbox if item.label == "Anleitungsstufe").value == "Beginner"
+    assert next(item for item in at.selectbox if item.label == "Anleitungsstufe").value == "Expert"
 
 
 def test_setup_choices_survive_a_language_switch():

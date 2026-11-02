@@ -15,6 +15,8 @@ common.no_image: "(no image)"
 common.load: "Load"
 common.save_file: "Save file (JSON)"
 guidance.label: "Guidance level"
+guidance.hint_title: "New to Final Titan?"
+guidance.hint: "Set this to <b>Beginner</b> and the game is explained step by step. You can change it any time!"
 
 # ------------------------------------------------------------------ option values
 opt.Easy: "Easy"

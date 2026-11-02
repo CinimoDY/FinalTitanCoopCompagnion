@@ -48,8 +48,14 @@ def render() -> None:
         st.caption(tr("setup.preset_fixed"))
 
     ss._setup_guidance = session.settings().level
-    st.selectbox(tr("guidance.label"), LEVELS, key="_setup_guidance", format_func=lambda v: tr(f"opt.{v}"),
-                 on_change=lambda: ss.update(opt_level=ss._setup_guidance, beginner_progress=None))
+    with st.container(key="setup_guidance"):
+        pick, hint = st.columns(2, vertical_alignment="center")
+        with pick:
+            st.selectbox(tr("guidance.label"), LEVELS, key="_setup_guidance", format_func=lambda v: tr(f"opt.{v}"),
+                         on_change=lambda: ss.update(opt_level=ss._setup_guidance, beginner_progress=None))
+        if ss._setup_guidance == "Expert":  # the hint has done its job once Beginner is picked
+            with hint:
+                components.speech_bubble(tr("guidance.hint_title"), tr("guidance.hint"))
 
     if st.button(tr("setup.continue"), type="primary", disabled=not expansions):
         setup.seed = random.randint(1, 999_999)

@@ -81,7 +81,7 @@ def text(m: Msg | str) -> str:
 
 def settings() -> GuidanceSettings:
     ss = st.session_state
-    return GuidanceSettings(level=ss.get("opt_level", "Beginner"), lang=lang())
+    return GuidanceSettings(level=ss.get("opt_level", "Expert"), lang=lang())
 
 
 def fx_settings() -> fx.FxSettings:
