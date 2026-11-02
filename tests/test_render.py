@@ -93,3 +93,19 @@ def test_payload_cannot_break_out_of_script():
     payload = json.loads(html[start:html.index(";\n", start)].replace("<\\/", "</"))
     assert payload["cues"][0]["params"]["text"].startswith("</script>")
     assert payload["settings"]["intensity"] == "Full"
+
+
+def test_german_cards_use_their_own_images_and_fall_back_to_english():
+    assert "de" in CAT.localized
+    de = render.card_src(CAT, "titans", TID, "full", "de")
+    assert de == f"app/static/cards/de/titans/{TID}.webp"
+    assert render.card_src(CAT, "titans", TID, "full", "en") == f"app/static/cards/titans/{TID}.webp"
+    assert render.card_src(CAT, "titans", TID, "full", "xx") == f"app/static/cards/titans/{TID}.webp"
+    assert render.card_src(CAT, "titans", TID, "full", "../x") is None
+    assert render.back_src(CAT, "titans", "de").endswith("/backs/titan.de.webp")
+
+
+def test_card_without_german_image_falls_back_to_english():
+    cat = replace(CAT, localized={"de": replace(CAT.localized["de"], titans={})})
+    assert render.card_src(cat, "titans", TID, "full", "de") == f"app/static/cards/titans/{TID}.webp"
+    assert cat.image_for("titans", TID, "de") == (CAT.titans[TID].image, "en")

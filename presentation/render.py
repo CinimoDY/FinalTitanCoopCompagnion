@@ -16,7 +16,7 @@ from typing import Any
 
 from PIL import Image, ImageDraw, ImageFont
 
-from finaltitan.catalog import Catalog
+from finaltitan.catalog import BASE_LANG, Catalog
 from finaltitan.i18n import DEFAULT, render, t
 from finaltitan.state import EnemyTitan, GameState
 
@@ -85,18 +85,20 @@ def ensure_image(src: Path, dest: Path, width: int) -> bool:
     return True
 
 
-def _rel(kind: str, card_id: str, size: str) -> str:
-    return f"cards/{kind}/{card_id}.webp" if size == "full" else f"cards/thumbs/{kind}/{card_id}.webp"
+def _rel(kind: str, card_id: str, size: str, lang: str = BASE_LANG) -> str:
+    folder = "cards" if lang == BASE_LANG else f"cards/{lang}"
+    return f"{folder}/{kind}/{card_id}.webp" if size == "full" else f"{folder}/thumbs/{kind}/{card_id}.webp"
 
 
-def card_src(cat: Catalog, kind: str, card_id: str, size: str = "full") -> str | None:
-    if kind not in KINDS or size not in SIZES or not _ID.match(card_id or ""):
+def card_src(cat: Catalog, kind: str, card_id: str, size: str = "full", lang: str = BASE_LANG) -> str | None:
+    """URL of the card image in `lang`, or in the base language when that card has no translated image."""
+    if kind not in KINDS or size not in SIZES or not _ID.match(card_id or "") or not _ID.match(lang):
         return None
-    card = (cat.titans if kind == "titans" else cat.upgrades).get(card_id)
-    if card is None or card.image is None:
+    image, lang = cat.image_for(kind, card_id, lang)
+    if image is None:
         return None
-    rel = _rel(kind, card_id, size)
-    if not ensure_image(Path(card.image), STATIC / rel, SIZES[size]):
+    rel = _rel(kind, card_id, size, lang)
+    if not ensure_image(Path(image), STATIC / rel, SIZES[size]):
         return None
     return f"{URL}/{rel}"
 
@@ -114,11 +116,13 @@ def _draw_upgrade_back(dest: Path, width: int = 300) -> None:
     _write_webp(im, dest)
 
 
-def back_src(cat: Catalog, kind: str) -> str | None:
+def back_src(cat: Catalog, kind: str, lang: str = BASE_LANG) -> str | None:
     if kind == "titans":
-        if cat.titan_back is None or not ensure_image(Path(cat.titan_back), STATIC / "cards/backs/titan.webp", SIZES["thumb"]):
+        image, lang = cat.back_for(lang)
+        name = "titan.webp" if lang == BASE_LANG else f"titan.{lang}.webp"
+        if image is None or not _ID.match(lang) or not ensure_image(Path(image), STATIC / "cards/backs" / name, SIZES["thumb"]):
             return None
-        return f"{URL}/cards/backs/titan.webp"
+        return f"{URL}/cards/backs/{name}"
     dest = STATIC / "cards/backs/upgrade.webp"
     if not dest.exists():
         _draw_upgrade_back(dest)
@@ -126,13 +130,17 @@ def back_src(cat: Catalog, kind: str) -> str | None:
 
 
 def build_all(cat: Catalog) -> int:
-    """Generates every card image and thumbnail once. Returns the number of cards processed."""
+    """Generates every card image and thumbnail once, for every language. Returns the number of base cards processed."""
     count = 0
     for kind, pool in (("titans", cat.titans), ("upgrades", cat.upgrades)):
         for cid in pool:
             for size in SIZES:
                 count += card_src(cat, kind, cid, size) is not None
+                for lang in cat.localized:
+                    card_src(cat, kind, cid, size, lang)
     back_src(cat, "titans")
+    for lang in cat.localized:
+        back_src(cat, "titans", lang)
     back_src(cat, "upgrades")
     return count
 
@@ -140,8 +148,9 @@ def build_all(cat: Catalog) -> int:
 # ------------------------------------------------------------------- cards
 
 def card_html(cat: Catalog, kind: str, card_id: str, *, cls: str = "", marks: Marks | None = None,
-              overlay: str = "", size: str = "full", name: str | None = None, fx_prefix: str = "card") -> str:
-    src = card_src(cat, kind, card_id, size)
+              overlay: str = "", size: str = "full", name: str | None = None, fx_prefix: str = "card",
+              lang: str = BASE_LANG) -> str:
+    src = card_src(cat, kind, card_id, size, lang)
     pool = cat.titans if kind == "titans" else cat.upgrades
     card = pool.get(card_id)
     alt = name or (card.name if card else card_id)
@@ -154,16 +163,16 @@ def card_html(cat: Catalog, kind: str, card_id: str, *, cls: str = "", marks: Ma
         classes.append(f"l2-{value}")
     if src is None:
         return f'<div class="ft-card ft-missing {esc(cls)}" data-fx-id="{esc(fx_id)}">{esc(alt)}</div>'
-    zoom = card_src(cat, kind, card_id, "full") if size != "full" else src
+    zoom = card_src(cat, kind, card_id, "full", lang) if size != "full" else src
     return template("card").substitute(
         cls=esc(" ".join(c for c in classes if c)), fx_id=esc(fx_id), fx=fx, src=esc(src),
         alt=esc(alt), zoom=esc(zoom or src), overlay=overlay,
     )
 
 
-def stack_html(cat: Catalog, kind: str, count: int, zone: str, label: str) -> str:
+def stack_html(cat: Catalog, kind: str, count: int, zone: str, label: str, lang: str = BASE_LANG) -> str:
     """A face-down stack (deck or enemy Upgrade hand) that is also a spawn zone for card motion."""
-    src = back_src(cat, kind)
+    src = back_src(cat, kind, lang)
     layers = min(max(int(count), 0), 4)
     imgs = "".join(
         f'<img class="ft-stack-card" src="{esc(src)}" alt="" style="--i:{i}">' for i in range(layers)

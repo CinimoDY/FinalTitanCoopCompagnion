@@ -32,7 +32,7 @@ def _reveal_body(reveals) -> None:
             else:
                 card = cat.upgrades.get(r.card_id)
                 st.subheader(tr("arena.enemy_upgrade", name=card.name if card else r.card_id))
-            components.card_image(card.image if card else None, 900)
+            components.card_image(cat.card_image(card, session.lang()) if card else None, 900)
     if st.button(tr("arena.continue"), type="primary"):
         st.rerun()
 
@@ -111,7 +111,7 @@ def _stage(state: GameState, cat, marks) -> None:
     if t.life is not None:
         _md(view.life_bar_html(t, marks))
     card = view.card_html(cat, "titans", t.card_id, cls=view.arena_classes(t), marks=marks,
-                            overlay=view.arena_overlay(t, marks, session.lang()))
+                            overlay=view.arena_overlay(t, marks, session.lang()), lang=session.lang())
     _md(f'<div class="ft-arena-zone" data-fx-zone="arena">{card}</div>')
     if t.life is not None:
         with st.container(key="ft_charge_row", horizontal=True):
@@ -131,12 +131,12 @@ def _side(state: GameState, cat, marks) -> None:
     if state.bench:
         nxt = state.bench[0]
         label = f'<div class="ft-zone-label">{esc(tr("zone.next_enemy"))} &middot; <b>{esc(nxt.name)}</b></div>'
-        card = view.card_html(cat, "titans", nxt.card_id, cls="next enemy", marks=marks, overlay=view.badges_html(nxt, marks, lang))
+        card = view.card_html(cat, "titans", nxt.card_id, cls="next enemy", marks=marks, overlay=view.badges_html(nxt, marks, lang), lang=lang)
     else:
         label = f'<div class="ft-zone-label">{esc(tr("zone.next_enemy"))}</div>'
         card = '<div class="ft-next-empty"></div>'
-    deck = view.stack_html(cat, "titans", len(state.deck), "deck", tr("zone.deck"))
-    pile = "".join(view.card_html(cat, "titans", cid, cls="ko", size="thumb", fx_prefix="ko") for cid in state.defeated)
+    deck = view.stack_html(cat, "titans", len(state.deck), "deck", tr("zone.deck"), lang)
+    pile = "".join(view.card_html(cat, "titans", cid, cls="ko", size="thumb", fx_prefix="ko", lang=lang) for cid in state.defeated)
     _md(
         f'<div class="ft-side-row ft-zoomable"><div class="ft-side-col" data-fx-zone="next-enemy">{label}{card}</div>'
         f'<div class="ft-side-col">{deck}<div class="ft-zone-label">{esc(tr("zone.defeated"))} <b>{len(state.defeated)}/{int(state.total)}</b></div>'
@@ -145,15 +145,15 @@ def _side(state: GameState, cat, marks) -> None:
 
 
 def _upgrades(state: GameState, cat, marks) -> None:
-    tr = session.translator()
+    tr, lang = session.translator(), session.lang()
     ups = state.active_upgrades
-    hand = view.stack_html(cat, "upgrades", len(state.upgrade_hand), "hand", tr("zone.hand"))
+    hand = view.stack_html(cat, "upgrades", len(state.upgrade_hand), "hand", tr("zone.hand"), lang)
     head = (f'<div class="ft-up-head">{hand}<div class="ft-zone-label">{esc(tr("zone.enemy_upgrades"))} &middot; '
             f'<b>{len(ups)}</b> {esc(tr("zone.active"))}</div></div>')
     new = f'<span class="ft-new">{esc(tr("card.new"))}</span>'
     cards = "".join(
         "<div>" + view.card_html(cat, "upgrades", uid, cls="upgrade", marks=marks,
-                                   overlay=new if uid in state.new_upgrades else "") + "</div>"
+                                   overlay=new if uid in state.new_upgrades else "", lang=lang) + "</div>"
         for uid in ups
     )
     many = " many" if len(ups) > 6 else ""
@@ -165,7 +165,7 @@ def _upgrades(state: GameState, cat, marks) -> None:
 
 def _guide_panel(state: GameState, g: Guidance, cat) -> None:
     tr = session.translator()
-    portrait = view.card_src(cat, "titans", state.arena.card_id, "thumb") if state.arena else None
+    portrait = view.card_src(cat, "titans", state.arena.card_id, "thumb", session.lang()) if state.arena else None
     confirmation = None
     with st.container(key="ft_guide_content"):
         _md(view.actor_html(g.actor_kind, g.actor_label, portrait))
@@ -318,6 +318,6 @@ def render() -> None:
                 _controls(state, cat)
             with st.container(key="ft_ticker", horizontal=True, vertical_alignment="center"):
                 _ticker(state)
-    assets = {"titan_back": view.back_src(cat, "titans"), "upgrade_back": view.back_src(cat, "upgrades")}
+    assets = {"titan_back": view.back_src(cat, "titans", session.lang()), "upgrade_back": view.back_src(cat, "upgrades")}
     fx_layer(ss.fx_queue, fx_set, assets)
 

@@ -36,7 +36,7 @@ def _card(card, width: int, key: str, taken: bool, blocked: bool = False, note: 
     """A borderless card image with its name above; clicking it toggles the card."""
     st.caption(f"**{card.name}** · {card.max_life} / {card.speed}{note}")
     with st.container(key=f"card_{key}"):
-        components.card_image(card.image, width, gray=taken or blocked, arrow=taken)
+        components.card_image(session.catalog().card_image(card, session.lang()), width, gray=taken or blocked, arrow=taken)
         if not blocked:
             st.button(card.name, key=f"toggle_{key}", on_click=_toggle, args=(card.id,))
 

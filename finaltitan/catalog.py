@@ -4,7 +4,7 @@ from __future__ import annotations
 import csv
 import re
 import unicodedata
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -12,6 +12,7 @@ DATA_DIR = ROOT / "data"
 ASSETS = ROOT / "assets"
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp"}
 TITAN_BACK_STEM = "finalTitanCardBackside"
+BASE_LANG = "en"  # the images directly under assets/titans and assets/upgrades; other languages live in assets/<lang>/
 
 TITAN_FIELDS = ["id", "name", "max_life", "speed", "armor", "team_power", "advanced", "enemy_usable", "legendary_id", "expansion"]
 UPGRADE_FIELDS = ["id", "name", "advanced", "enemy_usable", "legendary", "expansion"]
@@ -51,10 +52,33 @@ class UpgradeCard:
 
 
 @dataclass
+class LangImages:
+    titans: dict[str, Path]
+    upgrades: dict[str, Path]
+    titan_back: Path | None = None
+
+
+@dataclass
 class Catalog:
     titans: dict[str, TitanCard]
     upgrades: dict[str, UpgradeCard]
     titan_back: Path | None = None
+    localized: dict[str, LangImages] = field(default_factory=dict)  # lang -> images found in assets/<lang>/
+
+    def image_for(self, kind: str, card_id: str, lang: str = BASE_LANG) -> tuple[Path | None, str]:
+        """The card's image in `lang` and the language it really is in; falls back to the base images."""
+        found = getattr(self.localized.get(lang), kind, {}).get(card_id)
+        if found is not None:
+            return found, lang
+        card = (self.titans if kind == "titans" else self.upgrades).get(card_id)
+        return (card.image if card else None), BASE_LANG
+
+    def back_for(self, lang: str = BASE_LANG) -> tuple[Path | None, str]:
+        found = self.localized[lang].titan_back if lang in self.localized else None
+        return (found, lang) if found is not None else (self.titan_back, BASE_LANG)
+
+    def card_image(self, card: TitanCard | UpgradeCard, lang: str = BASE_LANG) -> Path | None:
+        return self.image_for("titans" if isinstance(card, TitanCard) else "upgrades", card.id, lang)[0]
 
     def expansions(self) -> list[str]:
         names = {t.expansion for t in self.titans.values()} | {u.expansion for u in self.upgrades.values()}
@@ -117,7 +141,19 @@ def load_catalog(data_dir: Path = DATA_DIR, assets: Path = ASSETS) -> Catalog:
             expansion=r.get("expansion", ""), image=u_images.get(r["id"]),
         )
         upgrades.setdefault(card.id, card)
-    return Catalog(titans, upgrades, t_images.get(TITAN_BACK_STEM))
+    return Catalog(titans, upgrades, t_images.get(TITAN_BACK_STEM), localized_images(assets))
+
+
+def localized_images(assets: Path) -> dict[str, LangImages]:
+    """Images of every translated card set, found in assets/<lang>/titans and assets/<lang>/upgrades."""
+    found: dict[str, LangImages] = {}
+    for base in sorted(assets.iterdir()) if assets.is_dir() else []:
+        if base.name in ("titans", "upgrades") or not base.is_dir():
+            continue
+        if (base / "titans").is_dir() or (base / "upgrades").is_dir():
+            titans = image_index(base / "titans")
+            found[base.name] = LangImages(titans, image_index(base / "upgrades"), titans.get(TITAN_BACK_STEM))
+    return found
 
 
 def _b(value: bool) -> str:
@@ -154,4 +190,10 @@ def validate(data_dir: Path = DATA_DIR, assets: Path = ASSETS) -> list[str]:
         ignore = {TITAN_BACK_STEM} if kind == "Titan" else set()
         for stem in sorted(set(images) - seen - ignore):
             issues.append(f"{kind} image '{stem}' has no metadata row")
+    known = {"Titan": {r["id"] for r in read_rows(data_dir / "titans.csv")} | {TITAN_BACK_STEM},
+             "Upgrade": {r["id"] for r in read_rows(data_dir / "upgrades.csv")}}
+    for lang, imgs in localized_images(assets).items():
+        for kind, found in (("Titan", imgs.titans), ("Upgrade", imgs.upgrades)):
+            for stem in sorted(set(found) - known[kind]):
+                issues.append(f"{lang} {kind} image '{stem}' has no metadata row")
     return issues
