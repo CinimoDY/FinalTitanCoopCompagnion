@@ -324,10 +324,11 @@ def render() -> None:
                 _side(state, cat, marks)
             with st.container(key="ft_upgrades"):
                 _upgrades(state, cat, marks)
-            with st.container(key="ft_caption"):
-                _guide_panel(state, g, cat)
-            with st.container(key="ft_pad"):
-                _controls(state, cat)
+            with st.container(key="ft_left"):
+                with st.container(key="ft_caption"):
+                    _guide_panel(state, g, cat)
+                with st.container(key="ft_pad"):
+                    _controls(state, cat)
             with st.container(key="ft_ticker", horizontal=True, vertical_alignment="center"):
                 _ticker(state)
     assets = {"titan_back": view.back_src(cat, "titans", session.lang()), "upgrade_back": view.back_src(cat, "upgrades")}

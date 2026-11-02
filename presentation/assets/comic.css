@@ -99,8 +99,8 @@ div[class*="_lang_"][class*="_on"] .ft-flag-name { color: var(--ft-yellow); }
 .st-key-ft_screen {
   display: grid !important;
   grid-template-columns: minmax(0, 32fr) minmax(0, 40fr) minmax(0, 28fr);
-  grid-template-rows: var(--ft-hud-h) minmax(0, 44fr) minmax(0, 56fr) auto var(--ft-ticker-h);
-  grid-template-areas: "hud hud hud" "caption stage side" "caption stage upgrades" "pad stage upgrades" "ticker ticker ticker";
+  grid-template-rows: var(--ft-hud-h) minmax(0, 44fr) minmax(0, 56fr) var(--ft-ticker-h);
+  grid-template-areas: "hud hud hud" "left stage side" "left stage upgrades" "ticker ticker ticker";
   gap: var(--ft-gap) !important; column-gap: 28px !important;
   flex: none !important;
   height: var(--ft-screen-h) !important; overflow: hidden !important;
@@ -110,11 +110,15 @@ div[class*="_lang_"][class*="_on"] .ft-flag-name { color: var(--ft-yellow); }
 .st-key-ft_screen > .st-key-ft_stage, .st-key-ft_screen > :has(> .st-key-ft_stage) { grid-area: stage; }
 .st-key-ft_screen > .st-key-ft_side, .st-key-ft_screen > :has(> .st-key-ft_side) { grid-area: side; }
 .st-key-ft_screen > .st-key-ft_upgrades, .st-key-ft_screen > :has(> .st-key-ft_upgrades) { grid-area: upgrades; }
-.st-key-ft_screen > .st-key-ft_caption, .st-key-ft_screen > :has(> .st-key-ft_caption) { grid-area: caption; }
-.st-key-ft_screen > .st-key-ft_pad, .st-key-ft_screen > :has(> .st-key-ft_pad) { grid-area: pad; }
+.st-key-ft_screen > .st-key-ft_left, .st-key-ft_screen > :has(> .st-key-ft_left) { grid-area: left; }
 .st-key-ft_screen > .st-key-ft_ticker, .st-key-ft_screen > :has(> .st-key-ft_ticker) { grid-area: ticker; }
 .st-key-ft_screen > * > [class*="st-key-ft_"] { height: 100% !important; min-height: 0; }
-.st-key-ft_screen > :has(> .st-key-ft_caption), .st-key-ft_screen > :has(> .st-key-ft_pad) { overflow: hidden; padding: 0 8px 8px 0; }
+.st-key-ft_screen > .st-key-ft_left, .st-key-ft_screen > :has(> .st-key-ft_left) { overflow: hidden; padding: 0 8px 8px 0; }
+/* Left column: guide box on top, command pad directly below it whatever the box's height. */
+.st-key-ft_left { gap: var(--ft-gap) !important; }
+.st-key-ft_left > .st-key-ft_caption, .st-key-ft_left > :has(> .st-key-ft_caption) { flex: 1 1 0% !important; min-height: 0; }
+.st-key-ft_left > :has(> .st-key-ft_caption) > .st-key-ft_caption { height: 100% !important; }
+.st-key-ft_left > .st-key-ft_pad, .st-key-ft_left > :has(> .st-key-ft_pad) { flex: none !important; }
 /* Cards size against their own region (container query units), so the fight screen never scrolls. */
 .st-key-ft_stage, .st-key-ft_side, .st-key-ft_upgrades { container-type: size; }
 /* Streamlit gives Markdown containers a negative bottom margin; our HTML blocks must not overlap. */
@@ -131,7 +135,11 @@ div[class*="_lang_"][class*="_on"] .ft-flag-name { color: var(--ft-yellow); }
     grid-template-areas: "hud hud" "stage side" "upgrades upgrades" "caption caption" "pad pad" "ticker ticker";
     height: auto !important; overflow: visible !important;
   }
-  .st-key-ft_screen > :has(> .st-key-ft_pad) { position: sticky; bottom: 0; z-index: 20; background: var(--ft-stage); border-top: 3px solid #000; padding-top: 6px; }
+  /* The left column dissolves so the pad can stick to the bottom of the whole page. */
+  .st-key-ft_left, .st-key-ft_screen > :has(> .st-key-ft_left) { display: contents !important; }
+  .st-key-ft_left > .st-key-ft_caption, .st-key-ft_left > :has(> .st-key-ft_caption) { grid-area: caption; width: auto !important; padding: 0 8px 8px 0; }
+  .st-key-ft_left > .st-key-ft_pad, .st-key-ft_left > :has(> .st-key-ft_pad) { grid-area: pad; width: auto !important; }
+  .st-key-ft_left > .st-key-ft_pad, .st-key-ft_left > :has(> .st-key-ft_pad) { position: sticky; bottom: 0; z-index: 20; background: var(--ft-stage); border-top: 3px solid #000; padding-top: 6px; }
   .st-key-ft_caption { max-height: 30dvh; }
   .st-key-ft_stage, .st-key-ft_side, .st-key-ft_upgrades { container-type: normal; }
   .ft-card.arena .ft-img { max-height: 40dvh; }
@@ -259,7 +267,7 @@ div[class*="_lang_"][class*="_on"] .ft-flag-name { color: var(--ft-yellow); }
 .st-key-ft_caption .st-key-ft_guide_content { height: 100% !important; min-height: 0; overflow-y: auto; }
 .st-key-ft_caption > :has(> .st-key-ft_guide_actions) { flex: none !important; margin-top: auto; }
 /* Expert mode: the caption box hugs its content instead of filling the column. */
-.st-key-ft_screen > :has(> .st-key-ft_caption .ft-expert) { align-self: start !important; max-height: 100%; }
+.st-key-ft_left > .st-key-ft_caption:has(.ft-expert), .st-key-ft_left > :has(> .st-key-ft_caption .ft-expert) { flex: none !important; }
 .st-key-ft_screen .st-key-ft_caption:has(.ft-expert) { height: auto !important; }
 .st-key-ft_caption:has(.ft-expert) > :has(> .st-key-ft_guide_content) { flex: none !important; }
 .st-key-ft_caption:has(.ft-expert) .st-key-ft_guide_content { height: auto !important; padding-bottom: 12px; }
