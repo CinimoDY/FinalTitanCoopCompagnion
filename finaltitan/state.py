@@ -51,8 +51,7 @@ class EnemyTitan:
 
 @dataclass
 class Roll:
-    """One enemy Action's roll. Two faces when Blessed or Cursed; `pick` is the die that counts, None until chosen.
-    An empty `faces` list is a roll made on the table: it only fills an Action slot."""
+    """One enemy Action's roll. Two faces when Blessed or Cursed; `pick` is the die that counts, None until chosen."""
     faces: list[str] = field(default_factory=list)
     token: Literal["none", "blessed", "cursed"] = "none"
     pick: int | None = None
@@ -63,9 +62,7 @@ class Roll:
 
     @property
     def result(self) -> str | None:
-        """The face that counts, or None while the players still have to choose or when nothing was rolled."""
-        if not self.faces:
-            return None
+        """The face that counts, or None while the players still have to choose."""
         if self.pick is not None and self.pick < len(self.faces):
             return self.faces[self.pick]
         return self.faces[0] if len(self.faces) == 1 or self.doubles else None

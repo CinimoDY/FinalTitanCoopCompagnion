@@ -5,7 +5,7 @@ import html
 
 import streamlit as st
 
-from finaltitan.setup import build_enemy, reserved_titans
+from finaltitan.setup import TITANS_PER_PLAYER, build_enemy, reserved_titans
 from ui import components, session
 
 GRID_COLS = 6
@@ -51,16 +51,19 @@ def render() -> None:
         return
     if ss.pop("go_arena", False):
         session.go("arena")
+    if ss.stage == "play":
+        session.back_button("back_draft")
     setup, cat = ss.setup, session.catalog()
     need = setup.player_titan_count()
     taken = list(dict.fromkeys(setup.player_titans))  # each Titan only once
     setup.player_titans = taken
     st.title(tr("draft.title"))
+    if session.settings().level == "Beginner":
+        st.markdown(tr("draft.rules", per=TITANS_PER_PLAYER))
     st.write(tr("draft.intro", need=need))
 
     with st.container(key="draft_header"):
-        head, action = st.columns([5, 2], vertical_alignment="center")
-        head.markdown(tr("draft.taken", taken=len(taken), need=need))
+        action = st.columns([5, 2], vertical_alignment="center")[1]
         if len(taken) == need:
             if ss.get("draft_error"):
                 st.error(session.text(ss.draft_error))

@@ -148,10 +148,8 @@ def test_doubles_resolve_one_die_and_never_remove_the_token():
     assert state.arena.statuses.blessed_cursed == "none"
 
 
-def test_a_roll_on_the_table_only_fills_an_action_slot():
-    state = enemy_turn(roll())
-    assert len(state.turn_rolls) == 1 and state.turn_rolls[0].result is None
-    assert dice.roll_hint(state).key == "roll.table_done"
+def test_a_roll_without_dice_is_ignored():
+    assert enemy_turn(roll()).turn_rolls == []
 
 
 def test_roll_hints_point_without_applying():
@@ -166,15 +164,13 @@ def test_roll_hints_point_without_applying():
 
 # ------------------------------------------------------------------- guide
 
-def test_guide_follows_the_dice_setting_and_language():
+def test_guide_follows_the_language():
     state = enemy_turn()
-    app = guide(state, GuidanceSettings(level="Beginner", dice="App"))
-    table = guide(state, GuidanceSettings(level="Beginner", dice="Table"))
+    en = guide(state, GuidanceSettings(level="Beginner"))
     de = guide(state, GuidanceSettings(level="Beginner", lang="de"))
-    assert any("Press **Roll**" in line for line in app.lines)
-    assert any("Roll one die" in line for line in table.lines)
+    assert any("Press **Roll**" in line for line in en.lines)
     assert any("**Würfeln**" in line for line in de.lines)
-    assert not any("{" in line for line in app.lines + table.lines + de.lines)
+    assert not any("{" in line for line in en.lines + de.lines)
 
 
 # --------------------------------------------------------------------- cues
@@ -241,11 +237,10 @@ def test_doubles_flag_the_cue_and_glow_one_icon():
     assert cues[1].params["face"] == "green"
 
 
-def test_ignored_rolls_and_table_rolls_make_no_glow():
+def test_ignored_rolls_make_no_glow():
     players = reduce(initial_state(make_setup(), CAT), [act(ev.BEGIN_GAME), act(ev.SET_STARTER, side="players")])
     assert step(players, roll("blue"))[1] == []
-    _, cues = step(enemy_turn(), roll())
-    assert [c.kind for c in cues] == ["roll"] and cues[0].params["faces"] == []
+    assert step(enemy_turn(), roll())[1] == []
 
 
 def test_taunts_follow_the_result_and_the_language():
@@ -293,14 +288,13 @@ def test_tracker_turns_to_done_and_counts_extra_rolls():
     assert "+1 extra" in view.roll_tracker_html(apply(state, roll("red")), "en")
 
 
-def test_tracker_marks_kept_and_dropped_dice_and_table_rolls():
+def test_tracker_marks_kept_and_dropped_dice():
     arena = enemy_turn().arena.card_id
     base = enemy_turn(act(ev.TOKEN, target=arena, token="blessed", delta=1), roll("blue", "red", token="blessed"))
     assert "kept" not in view.roll_tracker_html(base, "en")
     picked = apply(base, act(ev.ROLL_PICK, index=0))
     html = view.roll_tracker_html(picked, "en")
     assert 'class="die-blue kept"' in html and 'class="die-red dropped"' in html and "two blessed" in html
-    assert "&#127922;" in view.roll_tracker_html(enemy_turn(roll()), "en")
 
 
 def test_every_roll_text_exists_in_both_languages():

@@ -303,8 +303,6 @@ def _chip(r, srcs: dict[str, str], tr, latest: bool) -> str:
     cls = ["ft-chip"]
     if latest:
         cls.append("big new")
-    if not r.faces:
-        return f'<span class="{" ".join(cls)} table" title="{esc(tr("roll.table_done"))}">&#127922;</span>'
     names = " + ".join(tr(f"die.{f}") for f in r.faces)
     imgs = []
     for i, f in enumerate(r.faces):
@@ -319,7 +317,7 @@ def _chip(r, srcs: dict[str, str], tr, latest: bool) -> str:
     return f'<span class="{" ".join(cls)}" title="{esc(names)}">{"".join(imgs)}</span>'
 
 
-def roll_tracker_html(state: GameState, lang: str = DEFAULT, mode: str = "App") -> str:
+def roll_tracker_html(state: GameState, lang: str = DEFAULT) -> str:
     """The enemy's Actions this turn: one chip per roll so far, a dashed slot for each Action still to roll."""
     tr = _tr(lang)
     rolls = state.turn_rolls
@@ -330,7 +328,7 @@ def roll_tracker_html(state: GameState, lang: str = DEFAULT, mode: str = "App") 
     chips = [_chip(r, srcs, tr, i == len(rolls) - 1) for i, r in enumerate(rolls)]
     chips += ['<span class="ft-chip slot">?</span>'] * max(total - len(rolls), 0)
     extra = f' <em>{esc(tr("roll.extra", n=len(rolls) - total))}</em>' if len(rolls) > total else ""
-    return (f'<div class="ft-tracker{" done" if done else ""}" data-mode="{esc(mode)}" data-fx-target="roll-tracker">'
+    return (f'<div class="ft-tracker{" done" if done else ""}" data-fx-target="roll-tracker">'
             f'<div class="ft-tr-head"><b>{esc(head)}</b>{extra}</div><div class="ft-tr-chips">{"".join(chips)}</div></div>')
 
 

@@ -16,6 +16,8 @@ def render() -> None:
     cat = session.catalog()
     presets = session.presets()
     tr = session.translator()
+    if ss.stage == "play":
+        session.back_button("back_setup")
     head, flags = st.columns([4, 1], vertical_alignment="center")
     head.title(tr("setup.title"))
     with flags:

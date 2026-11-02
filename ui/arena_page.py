@@ -88,13 +88,9 @@ def _hud(state: GameState) -> None:
         ss._fight_guidance = session.settings().level
         st.selectbox(tr("guidance.label"), LEVELS, key="_fight_guidance", format_func=lambda v: tr(f"opt.{v}"),
                      on_change=lambda: ss.update(opt_level=ss._fight_guidance, beginner_progress=None))
-        ss._fight_dice = session.settings().dice
-        st.selectbox(tr("dice.label"), ["App", "Table"], key="_fight_dice", format_func=lambda v: tr(f"opt.{v}"),
-                     help=tr("dice.help"), on_change=lambda: ss.update(opt_dice=ss._fight_dice))
-        st.button(tr("menu.setup"), key="menu_setup", on_click=session.go, args=("setup",), width="stretch")
-        st.button(tr("menu.draft"), key="menu_draft", on_click=session.go, args=("draft",), width="stretch")
         st.button(tr("menu.log"), key="menu_log", on_click=session.go, args=("log",), width="stretch")
-        st.button(tr("menu.catalog"), key="menu_catalog", on_click=session.go, args=("catalog",), width="stretch")
+        if session.debug():
+            st.button(tr("menu.catalog"), key="menu_catalog", on_click=session.go, args=("catalog",), width="stretch")
         with st.expander(tr("menu.effects"), key="menu_effects"):
             _fx_menu()
         st.button(tr("menu.new_game"), key="menu_new", on_click=session.new_game, width="stretch")
@@ -169,7 +165,7 @@ def _upgrades(state: GameState, cat, marks) -> None:
 def _roll_panel(state: GameState) -> None:
     """Enemy turn: the Action tracker, what the latest roll asks for, and the picks for a Blessed or Cursed roll."""
     tr, lang = session.translator(), session.lang()
-    _md(view.roll_tracker_html(state, lang, session.settings().dice))
+    _md(view.roll_tracker_html(state, lang))
     hint = dice.roll_hint(state)
     last = state.turn_rolls[-1] if state.turn_rolls else None
     # Expert mode drops the "what to do with this result" lines; the picks and the doubles prompt stay.
@@ -236,8 +232,7 @@ def _guide_panel(state: GameState, g: Guidance, cat) -> None:
             with st.container(key="ft_guide_buttons", horizontal=True):
                 if g.step == "enemy_turn":
                     done = state.arena is not None and len(state.turn_rolls) >= dice.slots(state)
-                    label = tr("roll.button_table") if session.settings().dice == "Table" else tr("roll.button")
-                    st.button(label, key="ft_enemy_roll_done" if done else "ft_enemy_roll", type="primary",
+                    st.button(tr("roll.button"), key="ft_enemy_roll_done" if done else "ft_enemy_roll", type="primary",
                               on_click=session.roll_enemy, width="stretch",
                               help=tr("roll.button_done") if done else None)
                 for i, p in enumerate(g.primary):

@@ -9,8 +9,10 @@ from ui import session
 def render() -> None:
     session.init()
     ss, tr = st.session_state, session.translator()
-    st.title(tr("logpage.title"))
     state = session.game()
+    if state is not None:
+        session.back_button("back_log")
+    st.title(tr("logpage.title"))
     if state is None:
         st.info(tr("common.no_game"))
         up = st.file_uploader(tr("logpage.load_save"), type="json", key="log_upload")

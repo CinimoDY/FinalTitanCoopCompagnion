@@ -13,6 +13,7 @@ common.no_game: "Kein Spiel läuft."
 common.go_setup: "Zum Aufbau"
 common.no_image: "(kein Bild)"
 common.load: "Laden"
+common.back: "← Zurück"
 common.save_file: "Spielstand (JSON)"
 guidance.label: "Anleitungsstufe"
 guidance.hint_title: "Neu bei Final Titan?"
@@ -62,8 +63,15 @@ setup.err_upgrades: "Nicht genug Upgrades für den Gegner im Pool ({have} für {
 # ------------------------------------------------------------------ draft page
 draft.need_setup: "Richtet das Spiel zuerst auf der Seite Aufbau ein."
 draft.title: "Draft"
+draft.rules: |
+  - **Erstes Spiel?** Lasst den Draft aus: Teilt stattdessen jedem Spieler {per} zufällige Titanen aus.
+  - Mischt den Titanenstapel und legt **3 Titanen offen** in die Tischmitte.
+  - Der **jüngste Spieler** wählt zuerst, danach geht es **nach links** weiter.
+  - Wer am Zug ist, nimmt **1** der offenen Titanen und legt ihn offen vor sich.
+  - Ersetzt ihn sofort vom Stapel, sodass immer 3 Titanen zur Wahl liegen.
+  - Macht weiter, bis **jeder Spieler {per} Titanen** hat. Sie bilden eure Bank.
+  - Ihr dürft eure Wahl miteinander absprechen.
 draft.intro: "Draftet eure Titanen wie gewohnt am Tisch und klickt dann die **{need}** Titanen an, die ihr genommen habt, damit der Gegner sie nie bekommt. Findet jeden über Stärke (maximale Lebenspunkte) und Geschwindigkeit auf der Karte. Klickt eine markierte Karte erneut an, um die Markierung zu entfernen."
-draft.taken: "**Von Spielern genommen: {taken} / {need}**"
 draft.start: "Gegnerstapel bauen und starten"
 draft.empty: "Freier Platz"
 draft.empty_aria: "Freier Titanenplatz {n}"
@@ -92,8 +100,6 @@ arena.legendary: "Legendäres Upgrade: {name}"
 
 menu.undo: "↶ Rückgängig"
 menu.title: "☰ Menü"
-menu.setup: "⚙ Aufbau"
-menu.draft: "🃏 Draft"
 menu.log: "📜 Kampfprotokoll und Speichern"
 menu.catalog: "🗂 Katalog-Editor"
 menu.effects: "✨ Effekte"
@@ -234,6 +240,7 @@ save.invalid: "Ungültiger Spielstand: {err}"
 
 # ------------------------------------------------------------------ catalog editor
 cat.title: "Katalog-Editor"
+cat.debug_only: "Der Katalog-Editor ist nur im Debug-Modus verfügbar (DEBUG = true in .streamlit/secrets.toml)."
 cat.saved: "Katalog gespeichert"
 cat.issues: "{n} Prüfungsproblem(e)"
 cat.ok: "Metadaten und Bilder passen zusammen."
@@ -311,9 +318,7 @@ hint.card_wins: "Widerspricht eine Karte den Regeln, gilt die Karte."
 # ------------------------------------------------------------------ guide context lines
 guide.legendary_line: "Er hatte ein legendäres Upgrade: Dieser Spieler nimmt es ebenfalls."
 guide.dice_blessed: "Der Gegner hat einen Segen-Token: Würfeln wirft zwei Würfel pro Aktion; ihr wählt den, der für den Gegner am besten ist."
-guide.dice_blessed_table: "Der Gegner hat einen Segen-Token: Würfelt zwei Würfel pro Aktion und nehmt den, der für den Gegner am besten ist."
 guide.dice_cursed: "Der Gegner hat einen Fluch-Token: Würfeln wirft zwei Würfel pro Aktion; ihr wählt, welcher zählt. Bei einem Pasch entfernt den Token."
-guide.dice_cursed_table: "Der Gegner hat einen Fluch-Token: Würfelt zwei Würfel pro Aktion; ihr wählt, welcher zählt. Bei einem Pasch entfernt den Token."
 guide.reveal_one: "Ein neues gegnerisches Upgrade wird aufgedeckt"
 guide.reveal_all: "Alle übrigen gegnerischen Upgrades werden für den letzten Kampf aufgedeckt"
 guide.reveal_none: "Es sind keine gegnerischen Upgrades mehr zum Aufdecken übrig"
@@ -349,11 +354,6 @@ die.yellow: "Gelb"
 die.red: "Rot"
 die.charge: "Wut"
 die.miss: "Fehlschlag"
-dice.label: "Gegnerwürfel"
-dice.help: "App: Die App würfelt für den Gegner und zeigt das Ergebnis. Tisch: Ihr würfelt mit den echten Würfeln und zählt hier nur die Aktionen."
-opt.App: "App würfelt"
-opt.Table: "Am Tisch gewürfelt"
-roll.button_table: "Als gewürfelt markieren"
 roll.button_done: "Alle Aktionen gewürfelt"
 roll.button_again: "Nochmal würfeln"
 roll.action_n: "Aktion {n} von {total}"
@@ -368,14 +368,11 @@ roll.result_chart: "**{face}**: Handelt das leuchtende Symbol in den Angriffswer
 roll.result_charge: "**Wut!** Dreht den Wut-Token mit dem Schalter unter der Karte um und führt eine weitere Aktion aus."
 roll.result_ultimate: "**Wut!** Der Token ist schon umgedreht: Handelt den **ULTIMATE** ab und schaltet Wut danach aus."
 roll.result_miss: "**Fehlschlag**: keine Wirkung, außer eine Karte sagt etwas anderes."
-roll.table_done: "Am Tisch gewürfelt."
 log.roll: "{name} würfelt {face} (Aktion {n})."
 log.roll_two: "{name} würfelt {a} + {b} ({token}, Aktion {n})."
-log.roll_table: "Für {name} wurde am Tisch gewürfelt (Aktion {n})."
 log.roll_ignored: "Wurf ignoriert: Der Gegner ist nicht am Zug."
 log.roll_pick_enemy: "Der Gegner wählt {face}."
 log.roll_pick_players: "Die Spieler wählen {face}."
 hint.doubles: "Pasch: Handelt nur einen Würfel ab und entfernt den {token}-Token."
 js.roll_pick: "BEHALTEN!"
 guide.roll_app: "Drückt für jede Aktion des Gegners auf **Würfeln** ({actions} in diesem Zug)."
-guide.roll_table: "Würfelt für jede Aktion des Gegners einen Würfel ({actions} in diesem Zug) und markiert jeden als gewürfelt."

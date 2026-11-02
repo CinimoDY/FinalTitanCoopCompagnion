@@ -2,7 +2,7 @@
 
 A Streamlit web app that plays the **enemy team** in the Solo & Co-op mode of the card game *Final Titan*.
 
-The app is an enemy display: one shared screen at the table shows the current enemy Titan, its Life and tokens, the active enemy Upgrades, and the enemies still to come. Players keep handling their own Titans, tokens and cards with the physical game. The app rolls the enemy's dice and points at the result on the enemy card, but it never applies it: you resolve it by hand. Your own dice stay physical, and you can switch the enemy's dice back to the table in the menu.
+The app is an enemy display: one shared screen at the table shows the current enemy Titan, its Life and tokens, the active enemy Upgrades, and the enemies still to come. Players keep handling their own Titans, tokens and cards with the physical game. The app rolls the enemy's dice and points at the result on the enemy card, but it never applies it: you resolve it by hand. Your own dice stay physical.
 
 ## Features
 
@@ -13,7 +13,7 @@ The app is an enemy display: one shared screen at the table shows the current en
 - **Enemy rules engine**: queue order, Champion/Challenger roles, Upgrade reveals, Charge and Ultimate, Status tokens, start-of-turn Poison and Fire damage, the damage order (Armor, Dodge, Minion), fight clean-up, and victory and defeat detection.
 - **Undo** for every change. The engine is an event-sourced pure reducer.
 - **Save and load** the game as a JSON file, plus a full game log.
-- **Catalog editor** to check and edit card metadata next to each card image.
+- **Catalog editor** to check and edit card metadata next to each card image. Debug only: set `DEBUG = true` in `.streamlit/secrets.toml` to enable it.
 - **Comic fighting-game presentation**: a themed HUD with animated reveals, cinematics, optional sound and enemy taunts. All of it can be adjusted in the fight screen menu, including a reduced-motion mode.
 
 The app never reads or applies card text. Players read the card images and enter the results with the controls.
@@ -49,7 +49,7 @@ Streamlit opens the app in your browser, by default at http://localhost:8501. It
    - When the fight ends, the app runs the clean-up and reveals the next Upgrade.
 4. **Log and save**: review the log, or save and load the game.
 
-During a fight, the top bar is replaced by the **☰ Menu**: guidance level, links to the other pages, the enemy dice setting (App or Table), the effect settings (FX intensity, cinematics, animation speed, sound, taunts, K.O. style, reduced motion) and a **New game** button.
+During a fight, the top bar is replaced by the **☰ Menu**: guidance level, links to the other pages, the effect settings (FX intensity, cinematics, animation speed, sound, taunts, K.O. style, reduced motion) and a **New game** button.
 
 ## Running the tests
 

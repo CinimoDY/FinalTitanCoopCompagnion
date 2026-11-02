@@ -82,7 +82,7 @@ def text(m: Msg | str) -> str:
 
 def settings() -> GuidanceSettings:
     ss = st.session_state
-    return GuidanceSettings(level=ss.get("opt_level", "Expert"), lang=lang(), dice=ss.get("opt_dice", "App"))
+    return GuidanceSettings(level=ss.get("opt_level", "Expert"), lang=lang())
 
 
 def fx_settings() -> fx.FxSettings:
@@ -139,16 +139,12 @@ def dispatch(kind: str, **args: Any) -> None:
 
 
 def roll_enemy() -> None:
-    """The Roll button. In App mode the die is drawn here and stored in the event, so replay and undo stay exact;
-    in Table mode only an Action slot is filled."""
+    """The Roll button. The die is drawn here and stored in the event, so replay and undo stay exact."""
     state = game()
     if state is None or state.arena is None:
         return
     token = state.arena.statuses.blessed_cursed
-    if st.session_state.get("opt_dice", "App") == "Table":
-        dispatch(ev.ROLL, faces=[], token="none")
-    else:
-        dispatch(ev.ROLL, faces=dice.roll(1 if token == "none" else 2), token=token)
+    dispatch(ev.ROLL, faces=dice.roll(1 if token == "none" else 2), token=token)
 
 
 def undo() -> None:
@@ -160,10 +156,23 @@ def undo() -> None:
         reset_fx()
 
 
+def debug() -> bool:
+    """DEBUG = true in .streamlit/secrets.toml unlocks developer pages such as the catalog editor."""
+    try:
+        return bool(st.secrets.get("DEBUG", False))
+    except FileNotFoundError:  # no secrets file at all
+        return False
+
+
 def go(page: str) -> None:
     pg = st.session_state.pages.get(page)
     if pg is not None:
         st.switch_page(pg)
+
+
+def back_button(key: str) -> None:
+    """The way back from a screen opened in the fight menu; there is no page bar."""
+    st.button(tr("common.back"), key=key, on_click=go, args=("arena",))
 
 
 def start_game() -> None:
@@ -177,6 +186,7 @@ def start_game() -> None:
 
 
 def new_game() -> None:
+    """Abandons the current game and opens the Setup screen."""
     ss = st.session_state
     ss.setup = GameSetup()
     ss.events = []
@@ -185,6 +195,7 @@ def new_game() -> None:
     ss.reveal_marker = 0
     ss.beginner_progress = None
     reset_fx()
+    go("setup")
 
 
 def to_json() -> str:

@@ -358,16 +358,14 @@ def enemy_roll(state: GameState, faces: list[str] | None = None, token: str = "n
     """Records the enemy's roll. The result is shown, never applied: no Life, token or Charge changes."""
     t = state.arena
     faces = [str(f) for f in (faces or [])][:2]
-    if t is None or state.phase != "combat" or state.active_side != "enemy" or any(dice.face(f) is None for f in faces):
+    if t is None or state.phase != "combat" or state.active_side != "enemy" or not faces or any(dice.face(f) is None for f in faces):
         _log(state, "log.roll_ignored")
         return
     token = token if token in ("blessed", "cursed") and len(faces) == 2 else "none"
     r = Roll(faces=faces, token=token)  # type: ignore[arg-type]
     state.turn_rolls.append(r)
     n = len(state.turn_rolls)
-    if not faces:
-        _log(state, "log.roll_table", name=t.name, n=n)
-    elif len(faces) == 1:
+    if len(faces) == 1:
         _log(state, "log.roll", name=t.name, face=msg(f"die.{faces[0]}"), n=n)
     else:
         _log(state, "log.roll_two", name=t.name, a=msg(f"die.{faces[0]}"), b=msg(f"die.{faces[1]}"),

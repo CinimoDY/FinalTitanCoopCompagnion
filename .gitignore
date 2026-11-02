@@ -4,3 +4,4 @@ assets/Final Titan Card Database.csv
 __pycache__/
 
 CLAUDE.md
+.streamlit/secrets.toml

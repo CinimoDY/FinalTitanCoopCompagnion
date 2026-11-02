@@ -50,8 +50,6 @@ def roll_hint(state: GameState) -> Msg | None:
     r = state.turn_rolls[-1]
     if r.pending:
         return msg("roll.pick_enemy" if r.token == "blessed" else "roll.pick_players")
-    if not r.faces:
-        return msg("roll.table_done")
     if r.doubles:
         return msg("roll.doubles", token=msg(f"token.{r.token}"))
     f = face(r.result or "")

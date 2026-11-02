@@ -154,6 +154,19 @@ def test_draft_reserves_empty_slots(players, picked):
     assert len(placeholders) + len(selected) == players * 3
 
 
+@pytest.mark.parametrize("level, rules", [("Beginner", True), ("Expert", False)])
+def test_draft_explains_rules_only_to_beginners(level, rules):
+    def pre(at):
+        at.session_state["stage"] = "draft"
+        at.session_state["opt_level"] = level
+
+    at = run_page("draft_page", pre)
+    assert not at.exception, at.exception
+    texts = [entry.value for entry in at.markdown]
+    assert any("youngest player" in text for text in texts) == rules
+    assert any("Power" in text and "Speed" in text for text in texts)
+
+
 def test_draft_cards_toggle_once():
     def pre(at):
         at.session_state["stage"] = "draft"
@@ -267,6 +280,41 @@ def test_beginner_setup_shows_one_confirmed_step_at_a_time():
     assert not any("is the enemy Champion" in item.value for item in at.markdown)
 
 
+def test_catalog_menu_entry_only_in_debug_mode():
+    at = run_page("arena_page", prepared)
+    _click(at, "primary_setup_0")
+    assert any(b.key == "menu_log" for b in at.button)
+    assert not any(b.key == "menu_catalog" for b in at.button)
+
+    with patch("ui.session.debug", return_value=True):
+        at = run_page("arena_page", prepared)
+        _click(at, "primary_setup_0")
+    assert any(b.key == "menu_catalog" for b in at.button)
+
+
+def test_fight_menu_has_no_setup_or_draft_and_new_game_abandons_the_game():
+    at = run_page("arena_page", prepared)
+    _click(at, "primary_setup_0")
+    assert not any(b.key in ("menu_setup", "menu_draft") for b in at.button)
+    _click(at, "menu_new")
+    assert at.session_state["stage"] == "setup"
+    assert at.session_state["events"] == []
+
+
+def test_catalog_editor_is_locked_outside_debug_mode():
+    at = run_page("catalog_editor")
+    assert not at.exception, at.exception
+    assert any(b.key == "back_catalog" for b in at.button)
+    assert not at.segmented_control
+
+
+def test_log_page_has_back_button_during_a_game():
+    at = run_page("log_page", prepared)
+    assert not at.exception, at.exception
+    assert any(b.key == "back_log" for b in at.button)
+    assert not any(b.key == "back_log" for b in run_page("log_page").button)
+
+
 def test_fight_menu_changes_guidance_live_without_changing_game():
     def pre(at):
         prepared(at)
@@ -373,14 +421,13 @@ def test_fight_menu_switches_language_without_changing_game():
 
 # ------------------------------------------------------------------ enemy dice
 
-def enemy_turn_page(*extra, level="Expert", dice="App"):
+def enemy_turn_page(*extra, level="Expert"):
     from finaltitan import events as ev
     from finaltitan.events import act
 
     def pre(at):
         prepared(at)
         at.session_state["opt_level"] = level
-        at.session_state["opt_dice"] = dice
         at.session_state["events"] = [act(ev.BEGIN_GAME), act(ev.SET_STARTER, side="enemy"), *extra]
         at.session_state["version"] = 2
 
@@ -417,14 +464,6 @@ def test_roll_never_touches_the_game_state_beyond_the_log():
         _click(at, next(b.key for b in at.button if b.key and b.key.startswith("ft_enemy_roll")))
     arena = at.session_state["_game"][1].arena
     assert (arena.life, arena.charged) == (life, charged)
-
-
-def test_table_mode_marks_an_action_without_rolling_a_die():
-    at = enemy_turn_page(dice="Table")
-    assert any(b.label == "Mark as rolled" for b in at.button)
-    _click(at, "ft_enemy_roll")
-    roll = next(e for e in at.session_state["events"] if e.kind == "roll")
-    assert roll.args == {"faces": [], "token": "none"}
 
 
 def test_blessed_enemy_rolls_two_dice_and_the_players_pick_one():
@@ -468,14 +507,6 @@ def test_roll_button_and_tracker_speak_german():
     assert not at.exception, at.exception
     assert any(b.label == "Würfeln" for b in at.button)
     assert "Aktion 1 von 1" in _markdown(at)
-
-
-def test_the_fight_menu_switches_enemy_dice_mode():
-    at = enemy_turn_page()
-    box = next(s for s in at.selectbox if s.key == "_fight_dice")
-    box.select("Table").run()
-    assert at.session_state["opt_dice"] == "Table"
-    assert any(b.label == "Mark as rolled" for b in at.button)
 
 
 def test_expert_mode_hides_the_result_hint_but_beginner_keeps_it():

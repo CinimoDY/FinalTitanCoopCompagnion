@@ -202,8 +202,6 @@ def test_expert_guide_omits_enemy_roll_text():
     beginner = guide(state, GuidanceSettings(level="Beginner"))
     assert any("Press **Roll**" in line for line in beginner.lines)
     assert beginner.primary == expert.primary
-    table = guide(state, GuidanceSettings(level="Beginner", dice="Table"))
-    assert any("Roll one die" in line for line in table.lines)
 
 
 def test_expert_guide_omits_players_turn_text():

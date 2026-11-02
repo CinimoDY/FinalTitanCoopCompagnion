@@ -13,6 +13,7 @@ common.no_game: "No game in progress."
 common.go_setup: "Go to Setup"
 common.no_image: "(no image)"
 common.load: "Load"
+common.back: "← Back"
 common.save_file: "Save file (JSON)"
 guidance.label: "Guidance level"
 guidance.hint_title: "New to Final Titan?"
@@ -62,8 +63,15 @@ setup.err_upgrades: "Not enough enemy-usable Upgrades in the pool ({have} for {n
 # ------------------------------------------------------------------ draft page
 draft.need_setup: "Configure the game on the Setup page first."
 draft.title: "Draft"
+draft.rules: |
+  - **First game?** Skip the draft: deal {per} random Titans to each player instead.
+  - Shuffle the Titan deck and lay out **3 Titans face up** in the middle of the table.
+  - The **youngest player** picks first, then play goes **to the left**.
+  - On your turn, take **1** of the face-up Titans and put it face up in front of you.
+  - Replace it right away from the top of the deck, so there are always 3 Titans to choose from.
+  - Keep going until **every player has {per} Titans**. These form your bench.
+  - You may discuss your picks with each other.
 draft.intro: "Draft your Titans on the table as usual, then click the **{need}** Titans you took, so the enemy never gets them. Find each one by the Power (max Life) and Speed printed on the card. Click a marked card again to unmark it."
-draft.taken: "**Taken by players: {taken} / {need}**"
 draft.start: "Build enemy decks and start"
 draft.empty: "Empty spot"
 draft.empty_aria: "Empty Titan spot {n}"
@@ -92,8 +100,6 @@ arena.legendary: "Legendary Upgrade: {name}"
 
 menu.undo: "↶ Undo"
 menu.title: "☰ Menu"
-menu.setup: "⚙ Setup"
-menu.draft: "🃏 Draft"
 menu.log: "📜 Battle log and save"
 menu.catalog: "🗂 Catalog editor"
 menu.effects: "✨ Effects"
@@ -234,6 +240,7 @@ save.invalid: "Invalid save file: {err}"
 
 # ------------------------------------------------------------------ catalog editor
 cat.title: "Catalog editor"
+cat.debug_only: "The catalog editor is only available in debug mode (DEBUG = true in .streamlit/secrets.toml)."
 cat.saved: "Catalog saved"
 cat.issues: "{n} validation issue(s)"
 cat.ok: "Metadata and images are consistent."
@@ -311,9 +318,7 @@ hint.card_wins: "When a card contradicts the rules, the card wins."
 # ------------------------------------------------------------------ guide context lines
 guide.legendary_line: "It had a Legendary Upgrade: that player also takes it."
 guide.dice_blessed: "The enemy is Blessed: Roll throws two dice per Action; you pick the one that is best for the enemy."
-guide.dice_blessed_table: "The enemy is Blessed: roll two dice per Action and use the one that is best for the enemy."
 guide.dice_cursed: "The enemy is Cursed: Roll throws two dice per Action; you choose which one counts. On doubles, remove the token."
-guide.dice_cursed_table: "The enemy is Cursed: roll two dice per Action; you choose which one counts. On doubles, remove the token."
 guide.reveal_one: "A new enemy Upgrade is revealed"
 guide.reveal_all: "All remaining enemy Upgrades are revealed for the final fight"
 guide.reveal_none: "No enemy Upgrades are left to reveal"
@@ -349,11 +354,6 @@ die.yellow: "Yellow"
 die.red: "Red"
 die.charge: "Charge"
 die.miss: "Miss"
-dice.label: "Enemy dice"
-dice.help: "App: the app rolls the enemy's dice and shows the result. Table: you roll the real dice and only count the Actions here."
-opt.App: "App rolls"
-opt.Table: "Rolled on the table"
-roll.button_table: "Mark as rolled"
 roll.button_done: "All Actions rolled"
 roll.button_again: "Roll again"
 roll.action_n: "Action {n} of {total}"
@@ -368,14 +368,11 @@ roll.result_chart: "**{face}**: resolve the glowing icon on the Attack Chart. Ch
 roll.result_charge: "**Charge!** Flip the Charge token with the switch below the card and take another Action."
 roll.result_ultimate: "**Charge!** The token is already flipped: resolve the **ULTIMATE**, then switch Charge off."
 roll.result_miss: "**Miss**: no effect, unless a card says otherwise."
-roll.table_done: "Rolled on the table."
 log.roll: "{name} rolls {face} (Action {n})."
 log.roll_two: "{name} rolls {a} + {b} ({token}, Action {n})."
-log.roll_table: "{name} is rolled for on the table (Action {n})."
 log.roll_ignored: "Roll ignored: it is not the enemy's turn."
 log.roll_pick_enemy: "The enemy picks {face}."
 log.roll_pick_players: "The players pick {face}."
 hint.doubles: "Doubles: resolve only one die and remove the {token} token."
 js.roll_pick: "KEPT!"
 guide.roll_app: "Press **Roll** for each of the enemy's Actions ({actions} this turn)."
-guide.roll_table: "Roll one die for the enemy for each of its Actions ({actions} this turn) and mark each one as rolled."

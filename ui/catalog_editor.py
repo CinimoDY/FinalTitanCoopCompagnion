@@ -18,7 +18,11 @@ def _save(cat) -> None:
 def render() -> None:
     session.init()
     tr = session.translator()
+    session.back_button("back_catalog")
     st.title(tr("cat.title"))
+    if not session.debug():
+        st.info(tr("cat.debug_only"))
+        return
     if "edit_catalog" not in st.session_state:
         st.session_state.edit_catalog = copy.deepcopy(session.catalog())
     cat = st.session_state.edit_catalog
