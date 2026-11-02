@@ -78,6 +78,19 @@ div[class*="st-key-card_"]:hover img { filter: brightness(1.15); }
 div[class*="st-key-card_"] div[data-testid="stElementContainer"]:has(.ft-taken-arrow) { position: absolute; inset: 0; z-index: 2; width: 100% !important; pointer-events: none; }
 .ft-taken-arrow { position: absolute; left: 50%; top: 50%; width: 34%; max-width: 110px; transform: translate(-50%, -50%) rotate(-6deg); }
 .ft-taken-arrow svg { display: block; width: 100%; height: auto; overflow: visible; }
+/* Language flags: the selected one in color, the others greyed out. The invisible button covers the flag. */
+div[class*="_langs"] { gap: .75rem; align-items: flex-end; }
+div[class*="st-key-"][class*="_lang_"] { position: relative; gap: 0; align-items: center; }
+div[class*="_lang_"] div[data-testid="stElementContainer"]:has([data-testid="stButton"]) { position: absolute; inset: 0; z-index: 3; width: 100% !important; height: 100% !important; }
+div[class*="_lang_"] [data-testid="stButton"], div[class*="_lang_"] [data-testid="stButton"] button { width: 100% !important; height: 100% !important; min-height: 0; }
+div[class*="_lang_"] [data-testid="stButton"] button { opacity: 0; cursor: pointer; }
+.ft-flag { display: block; width: 100%; height: auto; overflow: visible; transition: filter .2s, transform .2s cubic-bezier(.34,1.8,.64,1); }
+.ft-flag-name { display: block; text-align: center; font-family: var(--ft-head); letter-spacing: .04em; font-size: .95rem; line-height: 1.1; color: var(--ft-dim); }
+div[class*="_lang_"][class*="_off"] .ft-flag { filter: grayscale(1) brightness(.55); transform: rotate(3deg) scale(.92); }
+div[class*="_lang_"][class*="_off"]:hover .ft-flag { filter: grayscale(.35) brightness(.85); }
+div[class*="_lang_"][class*="_on"] .ft-flag { transform: rotate(-5deg) scale(1.06); }
+div[class*="_lang_"][class*="_on"] .ft-flag-name { color: var(--ft-yellow); }
+.st-key-menu_langs .ft-flag-name { font-size: .8rem; }
 .st-key-draft_header { min-height: 2.5rem; }
 .st-key-draft_slots [data-testid="stImage"] img { aspect-ratio: 25 / 16; object-fit: contain; }
 .ft-draft-empty { box-sizing: border-box; width: 100%; aspect-ratio: 25 / 16; border: 2px dashed var(--ft-line); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: var(--ft-dim); background: var(--ft-panel); font-size: .875rem; }

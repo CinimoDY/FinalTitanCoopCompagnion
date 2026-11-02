@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from typing import Any
 
 import streamlit as st
@@ -10,6 +11,7 @@ from finaltitan.catalog import Catalog, load_catalog
 from finaltitan.engine import apply, initial_state, reduce
 from finaltitan.events import Action, act
 from finaltitan.guide import GuidanceSettings
+from finaltitan.i18n import LANGS, Msg, pick_lang, render, t
 from finaltitan.setup import GameSetup, load_presets
 from finaltitan.state import GameState
 from presentation import fx
@@ -39,11 +41,47 @@ def init() -> None:
     ss.setdefault("fx_queue", [])  # cue dicts of the latest action
     ss.setdefault("fx_marks", {})  # Layer 2 marks of the latest action
     ss.setdefault("fx_cursor", len(ss.events))  # number of actions already turned into cues
+    if "lang" not in ss:  # a manual choice is kept in the URL; otherwise the browser locale decides
+        ss.lang = pick_lang(st.query_params.get("lang") or st.context.locale)
+
+
+def lang() -> str:
+    return st.session_state.get("lang") or pick_lang(None)
+
+
+# Widgets whose option labels are translated. Streamlit matches their values by label, so a language switch
+# re-asserts their values from Python (read here with the old labels) instead of the frontend's old label.
+TRANSLATED_WIDGETS = ("setup_difficulty", "setup_preset", "ed_kind", "tok_kind")
+
+
+def set_lang(code: str) -> None:
+    ss = st.session_state
+    if code not in LANGS:
+        return
+    for key in TRANSLATED_WIDGETS:
+        if key in ss:
+            ss[key] = ss[key]
+    ss.lang = code
+    st.query_params["lang"] = code
+
+
+def tr(key: str, **params: Any) -> str:
+    return t(key, lang(), **params)
+
+
+def translator() -> Callable[..., str]:
+    """tr bound to the current language; safe for format_func, which Streamlit may call outside the run."""
+    current = lang()
+    return lambda key, **params: t(key, current, **params)
+
+
+def text(m: Msg | str) -> str:
+    return render(m, lang())
 
 
 def settings() -> GuidanceSettings:
     ss = st.session_state
-    return GuidanceSettings(level=ss.get("opt_level", "Beginner"))
+    return GuidanceSettings(level=ss.get("opt_level", "Beginner"), lang=lang())
 
 
 def fx_settings() -> fx.FxSettings:
@@ -54,7 +92,7 @@ def fx_settings() -> fx.FxSettings:
         speed=float(ss.get("fx_speed", d.speed)), sound=bool(ss.get("fx_sound", d.sound)),
         volume=float(ss.get("fx_volume", d.volume)), taunts=bool(ss.get("fx_taunts", d.taunts)),
         ko_style=ss.get("fx_ko_style", d.ko_style), idle=bool(ss.get("fx_idle", d.idle)),
-        reduced_motion=ss.get("fx_reduced_motion", d.reduced_motion),
+        reduced_motion=ss.get("fx_reduced_motion", d.reduced_motion), lang=lang(),
     )
 
 
@@ -93,7 +131,7 @@ def dispatch(kind: str, **args: Any) -> None:
     if after.phase in ("victory", "defeat") and before.phase != after.phase:
         summary = fx.game_summary(initial_state(ss.setup, catalog()), ss.events)
     cues = fx.cues_for(action, before, after, prefix=f"act-{after.event_count}-v{ss.version}", summary=summary,
-                       difficulty=ss.setup.difficulty, ko_setting=fx_settings().ko_style)
+                       difficulty=tr(f"opt.{ss.setup.difficulty}"), ko_setting=fx_settings().ko_style, lang=lang())
     ss.fx_queue = [c.to_dict() for c in cues]
     ss.fx_marks = fx.marks_for(cues, after.event_count)
     ss.fx_cursor = len(ss.events)
@@ -147,16 +185,16 @@ def load_json(raw: bytes) -> str | None:
     try:
         data = json.loads(raw)
         if data.get("version") != SAVE_VERSION:
-            return "This save file was made by an older version of the app."
+            return tr("save.old_version")
         setup = GameSetup.from_dict(data["setup"])
         events = [Action.from_dict(e) for e in data["events"]]
         cat = catalog()
         for cid in setup.enemy_titans + list(setup.player_titans):
             if cid not in cat.titans:
-                return f"Unknown Titan '{cid}' in save file."
+                return tr("save.unknown_titan", id=cid)
         state = reduce(initial_state(setup, cat), events)
     except (ValueError, KeyError, TypeError, AttributeError, IndexError) as exc:
-        return f"Invalid save file: {exc}"
+        return tr("save.invalid", err=exc)
     ss = st.session_state
     ss.setup, ss.events, ss.stage = setup, events, "play"
     ss.version += 1

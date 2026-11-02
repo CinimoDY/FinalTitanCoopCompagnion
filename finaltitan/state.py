@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Literal
 
+from .i18n import Msg
+
 Side = Literal["enemy", "players"]
 Phase = Literal["start", "fight_start", "combat", "cleanup", "victory", "defeat"]
 
@@ -58,7 +60,7 @@ class FightResult:
 @dataclass
 class LogEntry:
     index: int  # 1-based event number
-    text: str
+    msg: Msg  # rendered in the viewer's language
     kind: str = "event"  # event | hint
 
 
@@ -90,7 +92,7 @@ class GameState:
     fight_no: int = 1
     result: FightResult | None = None
     log: list[LogEntry] = field(default_factory=list)
-    hints: list[str] = field(default_factory=list)
+    hints: list[Msg] = field(default_factory=list)
     last_reveals: list[Reveal] = field(default_factory=list)
     event_count: int = 0
 

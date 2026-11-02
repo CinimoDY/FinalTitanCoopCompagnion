@@ -17,6 +17,7 @@ from typing import Any
 from PIL import Image, ImageDraw, ImageFont
 
 from finaltitan.catalog import Catalog
+from finaltitan.i18n import DEFAULT, render, t
 from finaltitan.state import EnemyTitan, GameState
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -28,14 +29,15 @@ KINDS = ("titans", "upgrades")
 _ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 Marks = dict[str, tuple[int, Any]]
 
+# Token icons; names and tooltips come from the string catalog (token.<key>, tip.<key>).
 TOKEN_INFO = {
-    "armor": ("&#128737;", "Armor", "Reduces each instance of damage by 1 per token."),
-    "poison": ("&#9760;", "Poison", "Damage equal to the tokens at the start of its turn; ignores Armor, Dodge, Minion."),
-    "fire": ("&#128293;", "Fire", "Damage equal to the tokens at the start of its turn, then +1 Fire; removed after the fight."),
-    "power": ("&#128170;", "Power", "Each token adds 1 to all damage this Titan deals."),
-    "dodge": ("&#128168;", "Dodge", "The next instance of damage is prevented and the token is lost."),
-    "minion": ("&#129485;", "Minion", "Prevents one instance of damage that would defeat this Titan."),
-    "action": ("&#10133;", "Action", "One extra Action on each of its turns."),
+    "armor": "&#128737;",
+    "poison": "&#9760;",
+    "fire": "&#128293;",
+    "power": "&#128170;",
+    "dodge": "&#128168;",
+    "minion": "&#129485;",
+    "action": "&#10133;",
 }
 ACTOR_ICONS = {"players": "&#128101;", "all": "&#127922;"}
 
@@ -49,6 +51,10 @@ def template(name: str) -> Template:
 
 def esc(value: Any) -> str:
     return html.escape(str(value), quote=True)
+
+
+def _tr(lang: str):
+    return lambda key, **params: t(key, lang, **params)
 
 
 def _fx(marks: Marks | None, key: str) -> tuple[str, Any]:
@@ -167,16 +173,18 @@ def stack_html(cat: Catalog, kind: str, count: int, zone: str, label: str) -> st
             f'<span class="ft-stack-label">{esc(label)} <b>{int(count)}</b></span></div>')
 
 
-def badges_html(t: EnemyTitan, marks: Marks | None = None) -> str:
+def badges_html(t: EnemyTitan, marks: Marks | None = None, lang: str = DEFAULT) -> str:
+    tr = _tr(lang)
     st_ = t.statuses
     parts = []
-    for key, (icon, name, tip) in TOKEN_INFO.items():
+    for key, icon in TOKEN_INFO.items():
+        name, tip = tr(f"token.{key}"), tr(f"tip.{key}")
         n = getattr(st_, key)
         if n <= 0:
             continue
         fx, before = _fx(marks, f"badge-{t.card_id}-{key}")
         pop = " pop" if fx != "static" else ""
-        tick = f" &middot; -{int(n)}/turn" if key in ("poison", "fire") else ""
+        tick = f" &middot; {esc(tr('badge.per_turn', n=int(n)))}" if key in ("poison", "fire") else ""
         parts.append(
             f'<span class="ft-tok tok-{key}{pop}" data-fx="{fx}" data-fx-id="badge-{esc(t.card_id)}-{key}" '
             f'title="{esc(name)}: {esc(tip)}"><i>{icon}</i><b>{int(n)}</b><em>{esc(name)}{tick}</em></span>'
@@ -184,24 +192,23 @@ def badges_html(t: EnemyTitan, marks: Marks | None = None) -> str:
     if st_.blessed_cursed != "none":
         word = st_.blessed_cursed
         fx, _ = _fx(marks, f"badge-{t.card_id}-{word}")
-        label = "Blessed &ndash; ENEMY picks" if word == "blessed" else "Cursed &ndash; YOU pick"
-        tip = "Rolls two dice; the enemy picks." if word == "blessed" else "Rolls two dice; the players pick."
+        label, tip = esc(tr(f"badge.{word}")), esc(tr(f"tip.{word}"))
         parts.append(
             f'<span class="ft-tok tok-{word}{" pop" if fx != "static" else ""}" data-fx="{fx}" '
             f'data-fx-id="badge-{esc(t.card_id)}-{word}" title="{tip}"><i>&#127922;&#127922;</i><em>{label}</em></span>'
         )
     if t.ultimate_form:
-        parts.append('<span class="ft-tok tok-uform" title="The Ultimate Form ability is active."><i>&#9733;</i><em>Ultimate Form</em></span>')
+        parts.append(f'<span class="ft-tok tok-uform" title="{esc(tr("tip.uform"))}"><i>&#9733;</i><em>{esc(tr("flag.ultimate_form"))}</em></span>')
     if t.team_power:
-        parts.append('<span class="ft-tok tok-team" title="Active for the whole enemy team, even from the bench."><i>&#9873;</i><em>Team Power</em></span>')
+        parts.append(f'<span class="ft-tok tok-team" title="{esc(tr("tip.team"))}"><i>&#9873;</i><em>{esc(tr("badge.team"))}</em></span>')
     return f'<div class="ft-badges">{"".join(parts)}</div>' if parts else ""
 
 
-def arena_overlay(t: EnemyTitan, marks: Marks | None = None) -> str:
+def arena_overlay(t: EnemyTitan, marks: Marks | None = None, lang: str = DEFAULT) -> str:
     fx, _ = _fx(marks, f"charge-{t.card_id}")
     chg = (f'<span class="ft-chg-ind{" on" if t.charged else ""}" data-fx="{fx}" '
            f'data-fx-target="charge-{esc(t.card_id)}">&#9889;</span>')
-    return badges_html(t, marks) + chg
+    return badges_html(t, marks, lang) + chg
 
 
 def arena_classes(t: EnemyTitan) -> str:
@@ -233,40 +240,46 @@ def pips_html(on: int, total: int, kind: str) -> str:
     return "".join(f'<i class="pip {kind}{" on" if i < on else ""}"></i>' for i in range(total))
 
 
-def hud_players_html(state: GameState) -> str:
+def hud_players_html(state: GameState, lang: str = DEFAULT) -> str:
     pips = pips_html(state.player_titans_left, state.player_titans_total, "titan")
     count = f'<span class="ft-count">{int(state.player_titans_left)}/{int(state.player_titans_total)}</span>'
     return template("hud_players").substitute(
+        players_label=esc(t("hud.players", lang)), titans_label=esc(t("hud.your_titans", lang)),
         titans_left=f'<span class="ft-pips" data-fx-target="titans-left">{pips}</span>{count}'
     )
 
 
-def hud_center_html(state: GameState) -> str:
+def hud_center_html(state: GameState, lang: str = DEFAULT) -> str:
     turn, turn_cls = "", ""
     if state.phase == "combat":
-        turn, turn_cls = ("ENEMY TURN", "enemy") if state.active_side == "enemy" else ("YOUR TURN", "players")
+        turn_cls = "enemy" if state.active_side == "enemy" else "players"
+        turn = t(f"turn.{turn_cls}", lang)
     elif state.phase in ("victory", "defeat"):
-        turn, turn_cls = state.phase.upper(), state.phase
+        turn, turn_cls = t(f"turn.{state.phase}", lang), state.phase
     elif state.phase == "fight_start":
-        turn, turn_cls = "FIGHT START", "neutral"
+        turn, turn_cls = t("turn.fight_start", lang), "neutral"
     elif state.phase == "cleanup":
-        turn, turn_cls = "CLEAN-UP", "neutral"
+        turn, turn_cls = t("turn.cleanup", lang), "neutral"
     done = len(state.defeated)
     return template("hud_center").substitute(
+        fight_label=esc(t("hud.fight", lang)), defeated_label=esc(t("hud.defeated", lang)),
         fight=int(state.fight_no), turn=esc(turn), turn_cls=turn_cls,
         defeated=pips_html(done, state.total, "ko") + f'<span class="ft-count">{done}/{int(state.total)}</span>',
     )
 
 
-def hud_enemy_html(state: GameState) -> str:
-    t = state.arena
-    if t is None:
-        return template("hud_enemy").substitute(role="", name="&mdash;", stats="")
-    armor = f"{t.base_armor}+{t.statuses.armor}" if t.statuses.armor else str(int(t.base_armor))
-    spd = f'{int(t.speed)}{"*" if t.speed_override is not None else ""}'
-    stats = (f'<span class="ft-stat" title="Armor"><i>ARM</i>{esc(armor)}</span>'
-             f'<span class="ft-stat" title="Speed"><i>SPD</i>{esc(spd)}</span>')
-    return template("hud_enemy").substitute(role=esc((state.enemy_role or "").upper()), name=esc(t.name), stats=stats)
+def hud_enemy_html(state: GameState, lang: str = DEFAULT) -> str:
+    tr = _tr(lang)
+    label = esc(tr("hud.enemy"))
+    a = state.arena
+    if a is None:
+        return template("hud_enemy").substitute(enemy_label=label, role="", name="&mdash;", stats="")
+    armor = f"{a.base_armor}+{a.statuses.armor}" if a.statuses.armor else str(int(a.base_armor))
+    spd = f'{int(a.speed)}{"*" if a.speed_override is not None else ""}'
+    stats = (f'<span class="ft-stat" title="{esc(tr("hud.armor"))}"><i>{esc(tr("hud.arm"))}</i>{esc(armor)}</span>'
+             f'<span class="ft-stat" title="{esc(tr("hud.speed"))}"><i>{esc(tr("hud.spd"))}</i>{esc(spd)}</span>')
+    role = tr(f"role.{state.enemy_role}").upper() if state.enemy_role else ""
+    return template("hud_enemy").substitute(enemy_label=label, role=esc(role), name=esc(a.name), stats=stats)
 
 
 # ------------------------------------------------------------ caption, ticker
@@ -280,18 +293,18 @@ def actor_html(kind: str, label: str, portrait: str | None = None) -> str:
     return f'<span class="ft-actor {kind}">{icon}<b>{esc(label)}</b></span>'
 
 
-def enemy_roll_html(actions: int) -> str:
-    word = "Action" if actions == 1 else "Actions"
-    return (f'<div class="ft-roll"><span class="ft-die">&#127922;</span><b>ROLL FOR THE ENEMY!</b>'
-            f'<span class="ft-combo-chip">{int(actions)} {word}</span></div>')
+def enemy_roll_html(actions: int, lang: str = DEFAULT) -> str:
+    word = t("word.action" if actions == 1 else "word.actions", lang)
+    return (f'<div class="ft-roll"><span class="ft-die">&#127922;</span><b>{esc(t("roll.title", lang))}</b>'
+            f'<span class="ft-combo-chip">{int(actions)} {esc(word)}</span></div>')
 
 
-def ticker_html(state: GameState) -> str:
+def ticker_html(state: GameState, lang: str = DEFAULT) -> str:
     entry = next((e for e in reversed(state.log) if e.kind != "hint"), None)
     if entry is None:
         return '<div class="ft-ticker-line" data-fx="static">&nbsp;</div>'
     return (f'<div class="ft-ticker-line" data-fx="act-{int(entry.index)}">'
-            f'<b>&#9654;</b> {esc(entry.text)}</div>')
+            f'<b>&#9654;</b> {esc(render(entry.msg, lang))}</div>')
 
 
 def empty_zone_html(zone: str, text: str) -> str:

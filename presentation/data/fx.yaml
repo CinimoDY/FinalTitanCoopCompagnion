@@ -1,28 +1,41 @@
-# Sound-effect words, thresholds, durations, and enemy taunts for the presentation layer.
-words:
-  damage:          # [minimum damage, word], checked top to bottom
-    - [5, "KA-BOOM!"]
-    - [3, "BAM!"]
-    - [1, "POW!"]
-  whiff: "WHIFF!"
-  armor: "CLANG!"
-  dodge: "SWISH!"
-  minion: "NOT TODAY!"
-  poison: "BLURB"
-  fire: "SIZZLE!"
-  charge: "ZZAP!"
-  ultimate: "ULTIMATE!!"
-  poof: "POOF!"
-  ko: "K.O.!"
-  fight: "FIGHT!"
-  retreat: "RETREAT!"
-  slash: "SHING!"
+# Sound-effect words per language, damage tiers, durations, and enemy taunts for the presentation layer.
+# Damage tier by minimum damage, checked top to bottom: drives the word, shake, knockback, hit-stop, and particles.
+damage_tiers:
+  - [5, 3]
+  - [3, 2]
+  - [1, 1]
 
-# Damage tier per word: drives shake, knockback, hit-stop, and particles.
-tiers:
-  "POW!": 1
-  "BAM!": 2
-  "KA-BOOM!": 3
+words:
+  en:
+    damage: {1: "POW!", 2: "BAM!", 3: "KA-BOOM!"}
+    whiff: "WHIFF!"
+    armor: "CLANG!"
+    dodge: "SWISH!"
+    minion: "NOT TODAY!"
+    poison: "BLURB"
+    fire: "SIZZLE!"
+    charge: "ZZAP!"
+    ultimate: "ULTIMATE!!"
+    poof: "POOF!"
+    ko: "K.O.!"
+    fight: "FIGHT!"
+    retreat: "RETREAT!"
+    slash: "SHING!"
+  de:
+    damage: {1: "PENG!", 2: "WUMMS!", 3: "KA-WUMM!"}
+    whiff: "DANEBEN!"
+    armor: "KLONK!"
+    dodge: "HUSCH!"
+    minion: "HEUTE NICHT!"
+    poison: "BLUBB"
+    fire: "ZISCH!"
+    charge: "BZZZT!"
+    ultimate: "ULTIMATE!!"
+    poof: "PUFF!"
+    ko: "K.O.!"
+    fight: "KAMPF!"
+    retreat: "RÜCKZUG!"
+    slash: "SCHWING!"
 
 durations:          # milliseconds at 1x speed
   hit: 900
@@ -57,11 +70,21 @@ durations:          # milliseconds at 1x speed
 
 # Generic taunts from the enemy team; never card specific.
 taunts:
-  whiff: ["Is that all you've got?", "Missed me!", "Too slow!"]
-  hit_small: ["That tickles.", "Hmph."]
-  dodge: ["Too slow!", "Over here!"]
-  minion: ["Not today!", "My minions have my back."]
-  start_turn: ["My turn!", "Brace yourselves!", "Now you'll see!"]
-  ultimate: ["Behold my true power!", "This ends now!"]
-  player_lost: ["Next!", "Who's next?", "Another one falls!"]
-  fight: ["Let's dance!", "You again?"]
+  en:
+    whiff: ["Is that all you've got?", "Missed me!", "Too slow!"]
+    hit_small: ["That tickles.", "Hmph."]
+    dodge: ["Too slow!", "Over here!"]
+    minion: ["Not today!", "My minions have my back."]
+    start_turn: ["My turn!", "Brace yourselves!", "Now you'll see!"]
+    ultimate: ["Behold my true power!", "This ends now!"]
+    player_lost: ["Next!", "Who's next?", "Another one falls!"]
+    fight: ["Let's dance!", "You again?"]
+  de:
+    whiff: ["Ist das alles?", "Daneben!", "Zu langsam!"]
+    hit_small: ["Das kitzelt.", "Pah."]
+    dodge: ["Zu langsam!", "Hier drüben!"]
+    minion: ["Heute nicht!", "Meine Diener halten zu mir."]
+    start_turn: ["Jetzt bin ich dran!", "Macht euch bereit!", "Jetzt seht ihr was!"]
+    ultimate: ["Seht meine wahre Macht!", "Jetzt ist Schluss!"]
+    player_lost: ["Der Nächste!", "Wer ist der Nächste?", "Wieder einer weniger!"]
+    fight: ["Auf in den Tanz!", "Ihr schon wieder?"]

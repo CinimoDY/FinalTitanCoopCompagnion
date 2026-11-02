@@ -10,6 +10,9 @@ from typing import Any
 
 import streamlit as st
 
+from finaltitan.i18n import DEFAULT, strings, t
+from finaltitan.state import COUNT_TOKENS
+from presentation import fx
 from presentation.fx import FxSettings
 
 ASSETS = Path(__file__).resolve().parent / "assets"
@@ -48,9 +51,19 @@ def engine() -> tuple[str, str]:
     return _engine(tuple((ASSETS / name).stat().st_mtime for name in ENGINE_FILES))
 
 
+def texts(lang: str) -> dict[str, str]:
+    """Overlay texts in lang: the js.* strings without prefix, token names, and the slash word."""
+    keys = [k for k in strings(DEFAULT) if k.startswith("js.")]
+    out = {k[3:]: t(k, lang) for k in keys}
+    out.update({f"token.{name}": t(f"token.{name}", lang) for name in (*COUNT_TOKENS, "blessed", "cursed")})
+    out["slash"] = fx._word("slash", lang)
+    return out
+
+
 def payload_html(cues: list[dict[str, Any]], settings: FxSettings, assets: dict[str, str | None]) -> str:
     version, code = engine()
-    payload = {"engine": version, "cues": cues, "settings": settings.to_dict(), "assets": assets}
+    payload = {"engine": version, "cues": cues, "settings": settings.to_dict(), "assets": assets,
+               "texts": texts(settings.lang)}
     return BOOT.replace("__ENGINE__", _json(code)).replace("__PAYLOAD__", _json(payload))
 
 

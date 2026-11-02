@@ -1,6 +1,8 @@
 """Draft page: click the Titans the players took, so the enemy cannot get them."""
 from __future__ import annotations
 
+import html
+
 import streamlit as st
 
 from finaltitan.setup import build_enemy, reserved_titans
@@ -23,7 +25,7 @@ def _start() -> None:
     try:
         ss.warnings = build_enemy(ss.setup, session.catalog(), session.presets())
     except ValueError as exc:
-        ss.draft_error = str(exc)
+        ss.draft_error = exc.args[0] if exc.args else str(exc)
         return
     ss.draft_error = None
     session.start_game()
@@ -42,9 +44,10 @@ def _card(card, width: int, key: str, taken: bool, blocked: bool = False, note: 
 def render() -> None:
     session.init()
     ss = st.session_state
+    tr = session.translator()
     if ss.stage == "setup":
-        st.info("Configure the game on the Setup page first.")
-        st.button("Go to Setup", on_click=session.go, args=("setup",))
+        st.info(tr("draft.need_setup"))
+        st.button(tr("common.go_setup"), on_click=session.go, args=("setup",))
         return
     if ss.pop("go_arena", False):
         session.go("arena")
@@ -52,16 +55,16 @@ def render() -> None:
     need = setup.player_titan_count()
     taken = list(dict.fromkeys(setup.player_titans))  # each Titan only once
     setup.player_titans = taken
-    st.title("Draft")
-    st.write(f"Draft your Titans on the table as usual, then click the **{need}** Titans you took, so the enemy never gets them. Find each one by the Power (max Life) and Speed printed on the card. Click a marked card again to unmark it.")
+    st.title(tr("draft.title"))
+    st.write(tr("draft.intro", need=need))
 
     with st.container(key="draft_header"):
         head, action = st.columns([5, 2], vertical_alignment="center")
-        head.markdown(f"**Taken by players: {len(taken)} / {need}**")
+        head.markdown(tr("draft.taken", taken=len(taken), need=need))
         if len(taken) == need:
             if ss.get("draft_error"):
-                st.error(ss.draft_error)
-            action.button("Build enemy decks and start", type="primary", on_click=_start, width="stretch")
+                st.error(session.text(ss.draft_error))
+            action.button(tr("draft.start"), type="primary", on_click=_start, width="stretch")
     with st.container(key="draft_slots"):
         for index, col in enumerate(st.columns(max(need, GRID_COLS))[:need]):
             with col:
@@ -71,16 +74,16 @@ def render() -> None:
                 else:
                     st.caption("\u00a0")
                     st.markdown(
-                        f'<div class="ft-draft-empty" role="img" aria-label="Empty Titan spot {index + 1}">'
-                        '<span>Empty spot</span></div>',
+                        f'<div class="ft-draft-empty" role="img" aria-label="{html.escape(tr("draft.empty_aria", n=index + 1))}">'
+                        f'<span>{html.escape(tr("draft.empty"))}</span></div>',
                         unsafe_allow_html=True,
                     )
 
     reserved = reserved_titans(setup, cat, session.presets())
     f1, f2, f3 = st.columns(3)
-    power = f1.number_input("Power (max Life)", min_value=0, value=None, step=1, placeholder="any")
-    speed = f2.number_input("Speed", min_value=0, value=None, step=1, placeholder="any")
-    name = f3.text_input("Name contains", placeholder="optional")
+    power = f1.number_input(tr("draft.power"), min_value=0, value=None, step=1, placeholder=tr("draft.any"), key="draft_power")
+    speed = f2.number_input(tr("draft.speed"), min_value=0, value=None, step=1, placeholder=tr("draft.any"), key="draft_speed")
+    name = f3.text_input(tr("draft.name"), placeholder=tr("draft.optional"), key="draft_name")
     pool = [
         t for t in cat.titans.values()
         if (not setup.expansions or t.expansion in setup.expansions)
@@ -89,11 +92,11 @@ def render() -> None:
         and (not name or name.lower() in t.name.lower())
     ]
     pool.sort(key=lambda t: (t.max_life, t.speed, t.name))
-    st.caption(f"{len(pool)} matches")
-    shown = pool if len(pool) <= PAGE_SIZE or st.checkbox(f"Show all {len(pool)}") else pool[:PAGE_SIZE]
+    st.caption(tr("draft.matches", n=len(pool)))
+    shown = pool if len(pool) <= PAGE_SIZE or st.checkbox(tr("draft.show_all", n=len(pool)), key="draft_show_all") else pool[:PAGE_SIZE]
 
     for start in range(0, len(shown), GRID_COLS):
         for col, t in zip(st.columns(GRID_COLS), shown[start:start + GRID_COLS]):
             with col:
                 _card(t, 320, t.id, taken=t.id in taken, blocked=t.id in reserved or (len(taken) >= need and t.id not in taken),
-                      note=" · reserved for the enemy" if t.id in reserved else "")
+                      note=tr("draft.reserved") if t.id in reserved else "")

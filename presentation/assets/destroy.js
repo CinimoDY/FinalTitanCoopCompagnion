@@ -81,7 +81,7 @@ function slash(img, r, cuts, sp) {
     return { pc, c, vx: (vx / len) * rnd(1.5, 3), vy: (vy / len) * rnd(1, 2), x: 0, y: 0, rot: 0, vr: rnd(-0.04, 0.04) };
   });
   sfx('pow');
-  word('SHING!', r.x + r.w / 2, r.y + r.h * 0.2, { color: '#e0f7ff', burst: '#00B4D8', size: 3.4, dur: 700 });
+  word(tx('slash', 'SHING!'), r.x + r.w / 2, r.y + r.h * 0.2, { color: '#e0f7ff', burst: '#00B4D8', size: 3.4, dur: 700 });
   let t = 0, sparked = false;
   return actor((dt, g) => {
     t += dt * sp;

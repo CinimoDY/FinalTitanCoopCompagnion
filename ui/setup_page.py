@@ -7,7 +7,7 @@ import streamlit as st
 
 from finaltitan.guide import LEVELS
 from finaltitan.setup import DIFFICULTIES, MAX_PLAYERS, GameSetup
-from ui import session
+from ui import components, session
 
 
 def render() -> None:
@@ -15,35 +15,43 @@ def render() -> None:
     ss = st.session_state
     cat = session.catalog()
     presets = session.presets()
-    st.title("Final Titan Co-op Companion")
-    st.write("The app plays and shows the enemy team. You play your own Titans with the physical game.")
+    tr = session.translator()
+    head, flags = st.columns([4, 1], vertical_alignment="center")
+    head.title(tr("setup.title"))
+    with flags:
+        components.language_picker("setup")
+    st.write(tr("setup.intro"))
     if ss.stage == "play":
-        st.info("A game is in progress. Continuing to the draft replaces it.")
+        st.info(tr("setup.in_progress"))
 
     left, right = st.columns(2)
     with left:
-        players = st.segmented_control("Number of players", list(range(1, MAX_PLAYERS + 1)), default=ss.setup.players, key="setup_count") or 1
-        labels = {None: "None (random decks)", **{k: v["name"] for k, v in presets.items()}}
+        players = st.segmented_control(tr("setup.players"), list(range(1, MAX_PLAYERS + 1)), default=ss.setup.players, key="setup_count") or 1
+        labels = {"": tr("setup.preset_none"), **{k: v["name"] for k, v in presets.items()}}
         options = list(labels)
-        preset = st.selectbox("Challenge preset", options, format_func=labels.get, index=options.index(ss.setup.preset) if ss.setup.preset in options else 0)
-        difficulty = st.select_slider("Difficulty", DIFFICULTIES, value=ss.setup.difficulty, disabled=preset is not None)
+        # Seeded from the setup instead of passing defaults, so a language switch can re-assert them (session.set_lang).
+        ss.setdefault("setup_preset", ss.setup.preset if ss.setup.preset in options else "")
+        ss.setdefault("setup_difficulty", ss.setup.difficulty)
+        preset = st.selectbox(tr("setup.preset"), options, format_func=labels.get, key="setup_preset") or None
+        difficulty = st.select_slider(tr("setup.difficulty"), DIFFICULTIES, disabled=preset is not None,
+                                      format_func=lambda v: tr(f"opt.{v}"), key="setup_difficulty")
     with right:
         all_exp = cat.expansions()
         default_expansions = [name for name in ("Base Set", "Advanced Set") if name in all_exp]
-        expansions = st.multiselect("Expansions in the pool", all_exp, default=ss.setup.expansions or default_expansions)
+        expansions = st.multiselect(tr("setup.expansions"), all_exp, default=ss.setup.expansions or default_expansions, key="setup_expansions")
         advanced = "Advanced Set" in expansions
 
     setup = GameSetup(players=players, difficulty=difficulty, expansions=expansions, advanced=advanced, preset=preset)
     if preset is None:
-        st.caption(f"The enemy team has {setup.enemy_count()} Titans. You will mark {setup.player_titan_count()} Titans taken by the players.")
+        st.caption(tr("setup.counts", enemy=setup.enemy_count(), mine=setup.player_titan_count()))
     else:
-        st.caption("The preset fixes the enemy Titans and Upgrades.")
+        st.caption(tr("setup.preset_fixed"))
 
     ss._setup_guidance = session.settings().level
-    st.selectbox("Guidance level", LEVELS, key="_setup_guidance",
+    st.selectbox(tr("guidance.label"), LEVELS, key="_setup_guidance", format_func=lambda v: tr(f"opt.{v}"),
                  on_change=lambda: ss.update(opt_level=ss._setup_guidance, beginner_progress=None))
 
-    if st.button("Continue to draft", type="primary", disabled=not expansions):
+    if st.button(tr("setup.continue"), type="primary", disabled=not expansions):
         setup.seed = random.randint(1, 999_999)
         ss.setup = setup
         ss.events = []
@@ -51,9 +59,9 @@ def render() -> None:
         ss.stage = "draft"
         session.go("draft")
 
-    with st.expander("Load a saved game"):
-        up = st.file_uploader("Save file (JSON)", type="json")
-        if up is not None and st.button("Load"):
+    with st.expander(tr("setup.load_saved")):
+        up = st.file_uploader(tr("common.save_file"), type="json", key="setup_upload")
+        if up is not None and st.button(tr("common.load")):
             err = session.load_json(up.getvalue())
             if err:
                 st.error(err)

@@ -16,6 +16,7 @@ from finaltitan import events as ev
 from finaltitan.combat import damage_pipeline
 from finaltitan.engine import apply
 from finaltitan.events import Action
+from finaltitan.i18n import DEFAULT, norm
 from finaltitan.state import COUNT_TOKENS, EnemyTitan, GameState
 
 DATA_FILE = Path(__file__).resolve().parent / "data" / "fx.yaml"
@@ -59,6 +60,7 @@ class FxSettings:
     ko_style: str = "Auto"
     idle: bool = True
     reduced_motion: str = "System"
+    lang: str = DEFAULT
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -68,25 +70,29 @@ def card_target(card_id: str) -> str:
     return f"card-{card_id}"
 
 
-def damage_word(amount: int) -> str | None:
-    for minimum, word in config()["words"]["damage"]:
-        if amount >= minimum:
-            return word
-    return None
-
-
 def tier(amount: int) -> int:
-    word = damage_word(amount)
-    return config()["tiers"].get(word, 0) if word else 0
+    for minimum, level in config()["damage_tiers"]:
+        if amount >= minimum:
+            return level
+    return 0
 
 
-def taunt(kind: str, n: int) -> str:
-    options = config()["taunts"].get(kind) or []
+def _words(lang: str) -> dict[str, Any]:
+    return config()["words"].get(norm(lang)) or config()["words"][DEFAULT]
+
+
+def damage_word(amount: int, lang: str = DEFAULT) -> str | None:
+    level = tier(amount)
+    return _words(lang)["damage"][level] if level else None
+
+
+def taunt(kind: str, n: int, lang: str = DEFAULT) -> str:
+    options = (config()["taunts"].get(norm(lang)) or config()["taunts"][DEFAULT]).get(kind) or []
     return options[n % len(options)] if options else ""
 
 
-def _word(key: str) -> str:
-    return config()["words"][key]
+def _word(key: str, lang: str = DEFAULT) -> str:
+    return _words(lang)[key]
 
 
 def _life_after(t: EnemyTitan, after: GameState) -> int:
@@ -152,19 +158,19 @@ class _Builder:
         self.cues.append(Cue(f"{self.prefix}-{len(self.cues)}", kind, target, params, blocking, duration))
 
 
-def _life_change(b: _Builder, t: EnemyTitan, life_to: int, word: str | None, n: int) -> None:
+def _life_change(b: _Builder, t: EnemyTitan, life_to: int, word: str | None, n: int, lang: str) -> None:
     life_from = t.life or 0
     delta = life_to - life_from
     common = {"life_from": life_from, "life_to": life_to, "max_life": t.max_life}
     if delta < 0:
         b.add("hit", card_target(t.card_id), amount=-delta, word=word, tier=max(tier(-delta), 1), **common)
         if word and -delta <= 2 and life_to > 0:
-            b.add("taunt", card_target(t.card_id), text=taunt("hit_small", n))
+            b.add("taunt", card_target(t.card_id), text=taunt("hit_small", n, lang))
     elif delta > 0:
         b.add("heal", card_target(t.card_id), amount=delta, **common)
 
 
-def _token_cues(b: _Builder, before_t: EnemyTitan, after_t: EnemyTitan, where: str) -> None:
+def _token_cues(b: _Builder, before_t: EnemyTitan, after_t: EnemyTitan, where: str, lang: str) -> None:
     target = card_target(after_t.card_id)
     for name in COUNT_TOKENS:
         old, new = getattr(before_t.statuses, name), getattr(after_t.statuses, name)
@@ -173,7 +179,7 @@ def _token_cues(b: _Builder, before_t: EnemyTitan, after_t: EnemyTitan, where: s
     old_bc, new_bc = before_t.statuses.blessed_cursed, after_t.statuses.blessed_cursed
     if old_bc != new_bc:
         if old_bc != "none":
-            b.add("poof", target, token=old_bc, word=_word("poof"), where=where)
+            b.add("poof", target, token=old_bc, word=_word("poof", lang), where=where)
         if new_bc != "none":
             b.add("token", target, token=new_bc, delta=1, value=1, where=where)
 
@@ -187,6 +193,7 @@ def cues_for(
     summary: dict[str, Any] | None = None,
     difficulty: str = "",
     ko_setting: str = "Auto",
+    lang: str = DEFAULT,
 ) -> list[Cue]:
     """Cues for one action, in timeline order (§3.3)."""
     n = after.event_count
@@ -200,12 +207,12 @@ def cues_for(
     # Start-of-turn ticks, then damage and heal.
     if kind == ev.START_TURN and bt is not None and (after.turn_started or after.result) and not before.turn_started:
         target = card_target(bt.card_id)
-        b.add("lunge", target, taunt=taunt("start_turn", n))
+        b.add("lunge", target, taunt=taunt("start_turn", n, lang))
         life_to = _life_after(bt, after)
         if life_to < (bt.life or 0):
             st = bt.statuses
-            b.add("tick", target, poison=st.poison, fire=st.fire, word=_word("fire" if st.fire else "poison"))
-            _life_change(b, bt, life_to, None, n)
+            b.add("tick", target, poison=st.poison, fire=st.fire, word=_word("fire" if st.fire else "poison", lang))
+            _life_change(b, bt, life_to, None, n, lang)
         at = after.arena
         if at is not None and at.card_id == bt.card_id:
             if at.statuses.fire > bt.statuses.fire:
@@ -217,25 +224,25 @@ def cues_for(
         calc = damage_pipeline(int(args.get("base", 0)), 0, int(args.get("bonus", 0)), bool(args.get("cancel", False)),
                                bt.armor, args.get("replacement"))
         if calc.armor_reduced > 0:
-            b.add("armor", target, word=_word("armor"), **{"from": calc.after_cancel, "to": calc.after_armor})
+            b.add("armor", target, word=_word("armor", lang), **{"from": calc.after_cancel, "to": calc.after_armor})
         life_to = _life_after(bt, after)
         at = after.find(bt.card_id)
         if life_to < (bt.life or 0):
-            _life_change(b, bt, life_to, damage_word((bt.life or 0) - life_to), n)
+            _life_change(b, bt, life_to, damage_word((bt.life or 0) - life_to, lang), n, lang)
         elif at is not None and at.statuses.dodge < bt.statuses.dodge:
-            b.add("dodge", target, word=_word("dodge"), taunt=taunt("dodge", n))
+            b.add("dodge", target, word=_word("dodge", lang), taunt=taunt("dodge", n, lang))
         elif at is not None and at.statuses.minion < bt.statuses.minion:
-            b.add("minion", target, word=_word("minion"), taunt=taunt("minion", n))
+            b.add("minion", target, word=_word("minion", lang), taunt=taunt("minion", n, lang))
         else:
-            b.add("whiff", target, word=_word("whiff"), taunt=taunt("whiff", n))
+            b.add("whiff", target, word=_word("whiff", lang), taunt=taunt("whiff", n, lang))
     elif kind in (ev.HEAL, ev.LIFE_ADJUST) and bt is not None:
-        _life_change(b, bt, _life_after(bt, after), None, n)
+        _life_change(b, bt, _life_after(bt, after), None, n, lang)
 
     # Token changes.
     if kind == ev.TOKEN:
         old, new = before.find(args.get("target", "")), after.find(args.get("target", ""))
         if old is not None and new is not None:
-            _token_cues(b, old, new, "arena" if after.arena is new else "bench")
+            _token_cues(b, old, new, "arena" if after.arena is new else "bench", lang)
 
     # Charge, Ultimate, Ultimate Form.
     if kind == ev.FLAG:
@@ -244,9 +251,9 @@ def cues_for(
             target = card_target(new.card_id)
             if args.get("flag") == "charged" and old.charged != new.charged:
                 if new.charged:
-                    b.add("charge_on", target, word=_word("charge"))
+                    b.add("charge_on", target, word=_word("charge", lang))
                 elif is_ultimate(action, before):
-                    b.add("ultimate", target, True, word=_word("ultimate"), name=new.name, taunt=taunt("ultimate", n))
+                    b.add("ultimate", target, True, word=_word("ultimate", lang), name=new.name, taunt=taunt("ultimate", n, lang))
                 else:
                     b.add("charge_off", target)
             elif args.get("flag") == "ultimate_form" and new.ultimate_form and not old.ultimate_form:
@@ -255,7 +262,7 @@ def cues_for(
     # Turn order.
     if kind == ev.SET_STARTER and before.phase == "fight_start" and after.phase == "combat" and after.arena:
         b.add("vs", "screen", True, name=after.arena.name, card=card_target(after.arena.card_id),
-              role=after.enemy_role, word=_word("fight"), taunt=taunt("fight", n))
+              role=after.enemy_role, word=_word("fight", lang), taunt=taunt("fight", n, lang))
         b.add("turn_banner", "screen", side=after.active_side)
     if kind == ev.END_TURN and after.active_side != before.active_side and after.active_side:
         b.add("turn_banner", "screen", side=after.active_side)
@@ -267,13 +274,13 @@ def cues_for(
     if after.result is not None and before.result is None and bt is not None:
         reason = after.result.reason
         if reason in ("enemy_defeated", "both_defeated"):
-            b.add("ko", card_target(bt.card_id), True, name=bt.name, word=_word("ko"),
+            b.add("ko", card_target(bt.card_id), True, name=bt.name, word=_word("ko", lang),
                   defeated=len(after.defeated), total=after.total, **ko_params(action, before, after, ko_setting))
         if after.player_titans_left < before.player_titans_left:
             b.add("player_lost", "titans-left", True, left=after.player_titans_left, total=after.player_titans_total,
-                  taunt=taunt("player_lost", n))
+                  taunt=taunt("player_lost", n, lang))
         if reason == "enemy_returned":
-            b.add("retreat", card_target(bt.card_id), True, name=bt.name, word=_word("retreat"))
+            b.add("retreat", card_target(bt.card_id), True, name=bt.name, word=_word("retreat", lang))
 
     # Reveals: Upgrades first, then the arena Titan, then the bench.
     ups = [r.card_id for r in after.last_reveals if r.kind == "upgrade"]

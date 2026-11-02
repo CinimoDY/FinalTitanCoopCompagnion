@@ -304,3 +304,55 @@ def test_expert_setup_keeps_existing_start_button():
     assert not at.exception, at.exception
     assert any(button.key == "primary_setup_0" for button in at.button)
     assert not any(button.key and button.key.startswith("beginner_setup") for button in at.button)
+
+
+def test_language_defaults_to_english_and_flags_switch_setup_to_german():
+    at = run_page("setup_page")
+    assert at.session_state["lang"] == "en"
+    assert at.title[0].value == "Final Titan Co-op Companion"
+    _click(at, "setup_langbtn_de")
+    assert at.session_state["lang"] == "de"
+    assert at.title[0].value == "Final Titan Koop-Begleiter"
+    assert at.query_params["lang"] == "de"
+    assert any(b.label == "Weiter zum Draft" for b in at.button)
+
+
+def test_language_comes_from_the_url_when_chosen_before():
+    def pre(at):
+        at.query_params["lang"] = "de"
+
+    at = run_page("setup_page", pre)
+    assert at.session_state["lang"] == "de"
+    assert next(item for item in at.selectbox if item.label == "Anleitungsstufe").value == "Beginner"
+
+
+def test_setup_choices_survive_a_language_switch():
+    at = run_page("setup_page")
+    next(item for item in at.select_slider if item.label == "Difficulty").set_value("Hard").run()
+    _click(at, "setup_langbtn_de")
+    assert next(item for item in at.select_slider if item.label == "Schwierigkeit").value == "Hard"
+    next(item for item in at.select_slider if item.label == "Schwierigkeit").set_value("Insane").run()
+    _click(at, "setup_langbtn_en")
+    assert next(item for item in at.select_slider if item.label == "Difficulty").value == "Insane"
+    assert next(item for item in at.selectbox if item.label == "Challenge preset").value == ""
+
+
+def test_fight_menu_switches_language_without_changing_game():
+    def pre(at):
+        prepared(at)
+        at.session_state["opt_level"] = "Expert"
+
+    at = run_page("arena_page", pre)
+    _click(at, "primary_setup_0")
+    version = at.session_state["version"]
+    events = list(at.session_state["events"])
+    queue = at.session_state["fx_queue"]
+    _click(at, "menu_langbtn_de")
+    assert at.session_state["lang"] == "de"
+    assert any(b.label == "Gegner beginnt" for b in at.button)
+    assert any(item.label == "Anleitungsstufe" for item in at.selectbox)
+    assert at.session_state["version"] == version
+    assert at.session_state["events"] == events
+    assert at.session_state["fx_queue"] == queue
+    _click(at, "menu_langbtn_en")
+    assert any(b.label == "Enemy starts" for b in at.button)

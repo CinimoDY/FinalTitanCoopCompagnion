@@ -2,8 +2,8 @@
 
 function summaryHtml(p) {
   const rows = [
-    ['Fights', p.fights], ['K.O.s', p.kos !== undefined ? p.kos + ' / ' + p.total : undefined], ['Ultimates', p.ultimates],
-    ['Damage dealt', p.damage], ['Your Titans left', p.titans_left !== undefined ? p.titans_left + ' / ' + p.titans_total : undefined],
+    [tx('fights', 'Fights'), p.fights], [tx('kos', 'K.O.s'), p.kos !== undefined ? p.kos + ' / ' + p.total : undefined], [tx('ultimates', 'Ultimates'), p.ultimates],
+    [tx('damage', 'Damage dealt'), p.damage], [tx('titans_left', 'Your Titans left'), p.titans_left !== undefined ? p.titans_left + ' / ' + p.titans_total : undefined],
   ];
   return rows.filter(([, v]) => v !== undefined).map(([k, v]) => '<span>' + esc(k) + '</span><b>' + esc(v) + '</b>').join('');
 }
@@ -17,7 +17,7 @@ function bigWord(text, x, y, size, burst, color) {
 HANDLERS.title = async (c) => {
   if (!cineOn(c)) return;
   const diff = c.params.difficulty ? '<div class="stamp">' + esc(String(c.params.difficulty).toUpperCase()) + '</div>' : '';
-  const cn = cine('', '<div class="lines"></div><div class="stack"><div class="title">FINAL TITAN</div><div class="sub">&mdash; CO-OP &mdash;</div>' + diff + '</div>');
+  const cn = cine('', '<div class="lines"></div><div class="stack"><div class="title">' + esc(tx('title', 'FINAL TITAN')) + '</div><div class="sub">' + esc(tx('coop', '— CO-OP —')) + '</div>' + diff + '</div>');
   sfx('fight');
   slam(cn.querySelector('.title'));
   slam(cn.querySelector('.sub'), 250);
@@ -41,7 +41,7 @@ HANDLERS.reveal_arena = async (c) => {
   cn.style.background = 'transparent';
   cn.querySelector('.spot').style.background =
     `radial-gradient(ellipse ${Math.round(r.w * 0.8)}px ${Math.round(r.h * 0.7)}px at ${m.x}px ${m.y}px, transparent 0 55%, rgba(0,0,0,.9) 100%)`;
-  const head = p.role === 'champion' ? 'THE CHAMPION AWAITS!' : 'A NEW CHALLENGER!';
+  const head = p.role === 'champion' ? tx('champion_awaits', 'THE CHAMPION AWAITS!') : tx('new_challenger', 'A NEW CHALLENGER!');
   const h = bigWord(head, m.x, Math.max(70, r.y + 40), 'clamp(2rem, 4vw, 3.4rem)', null, '#fff');
   const t = bigWord(p.name, m.x, r.y + r.h * 0.8, 'clamp(2.6rem, 5vw, 4.6rem)', '#E63946', '#FFD400');
   sfx('bam');
@@ -63,10 +63,10 @@ HANDLERS.vs = async (c) => {
     if (r) await word(p.word, r.x + r.w / 2, r.y + r.h * 0.4, { burst: '#E63946', color: '#FFD400', size: 5 });
     return;
   }
-  const players = p.role === 'champion' ? 'YOUR CHALLENGER' : 'YOUR CHAMPION';
+  const players = esc(p.role === 'champion' ? tx('your_challenger', 'YOUR CHALLENGER') : tx('your_champion', 'YOUR CHAMPION'));
   const pic = img ? '<img src="' + esc(img.currentSrc || img.src) + '" alt="">' : '';
   const cn = cine('', '<div class="vs"><div class="left"><div class="sil"></div><div class="sub">' + players + '</div></div>'
-    + '<div class="right">' + pic + '<div class="sub">' + esc(p.name) + '</div></div></div><div class="vs-word">VS</div>');
+    + '<div class="right">' + pic + '<div class="sub">' + esc(p.name) + '</div></div></div><div class="vs-word">' + esc(tx('vs', 'VS')) + '</div>');
   const vw = cn.querySelector('.vs-word');
   vw.style.opacity = 0;
   anim(cn.querySelector('.left'), [{ transform: 'translateX(-100%)' }, { transform: 'none' }], { duration: 420, easing: 'cubic-bezier(.2,.9,.3,1.2)' });
@@ -166,7 +166,7 @@ HANDLERS.player_lost = async (c) => {
   const p = c.params;
   let cn = null;
   if (cineOn(c)) {
-    cn = cine('gray', '<div class="stack"><div class="sub">One of your Titans has fallen&hellip;</div></div>');
+    cn = cine('gray', '<div class="stack"><div class="sub">' + esc(tx('fallen', 'One of your Titans has fallen…')) + '</div></div>');
     cn.style.background = 'rgba(0,0,0,.45)';
   }
   sfx('sad');
@@ -190,7 +190,7 @@ HANDLERS.player_lost = async (c) => {
 HANDLERS.final_fight = async (c) => {
   if (!cineOn(c)) return;
   const cn = cine('alert', '');
-  const b = div('ft-fx-banner final', 'FINAL FIGHT');
+  const b = div('ft-fx-banner final', esc(tx('final_fight', 'FINAL FIGHT')));
   b.style.zIndex = 11;
   sfx('bam');
   shake(2);
@@ -202,7 +202,7 @@ HANDLERS.final_fight = async (c) => {
 
 HANDLERS.victory = async (c) => {
   if (!cineOn(c)) return;
-  const cn = cine('', '<div class="lines"></div><div class="stack"><div class="title">VICTORY!</div><div class="panel">' + summaryHtml(c.params) + '</div></div>');
+  const cn = cine('', '<div class="lines"></div><div class="stack"><div class="title">' + esc(tx('victory', 'VICTORY!')) + '</div><div class="panel">' + summaryHtml(c.params) + '</div></div>');
   sfx('win');
   slam(cn.querySelector('.title'));
   const vw = W.innerWidth;
@@ -215,8 +215,8 @@ HANDLERS.victory = async (c) => {
 
 HANDLERS.defeat = async (c) => {
   if (!cineOn(c)) return;
-  const cn = cine('ink', '<div class="stack"><div class="title" style="color:#E63946;--shadow:#000">GAME OVER</div><div class="panel">' + summaryHtml(c.params)
-    + '</div><div class="sub">Try again? &mdash; New game in the command pad.</div></div>');
+  const cn = cine('ink', '<div class="stack"><div class="title" style="color:#E63946;--shadow:#000">' + esc(tx('game_over', 'GAME OVER')) + '</div><div class="panel">' + summaryHtml(c.params)
+    + '</div><div class="sub">' + esc(tx('try_again', 'Try again? — New game in the command pad.')) + '</div></div>');
   sfx('sad');
   anim(cn, [{ clipPath: 'circle(0% at 50% 45%)' }, { clipPath: 'circle(150% at 50% 45%)' }], { duration: 1200, easing: 'ease-in' });
   anim(cn.querySelector('.title'), [{ transform: 'translateY(-40px)', opacity: 0 }, { transform: 'translateY(0) scaleY(1.08)', opacity: 1, offset: 0.7 }, { transform: 'none', opacity: 1 }],

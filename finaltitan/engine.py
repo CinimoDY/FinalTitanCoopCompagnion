@@ -8,6 +8,7 @@ from . import events as ev
 from .catalog import Catalog
 from .combat import damage_pipeline, prevention, start_of_turn_damage
 from .events import Action
+from .i18n import Msg, msg
 from .setup import GameSetup
 from .state import COUNT_TOKENS, EnemyTitan, FightResult, GameState, LogEntry, Reveal
 
@@ -52,7 +53,7 @@ def apply_inplace(state: GameState, action: Action) -> None:
     state.event_count += 1
     handler = HANDLERS.get(action.kind)
     if handler is None:
-        _log(state, f"Unknown action '{action.kind}' ignored.")
+        _log(state, "log.unknown_action", kind=action.kind)
         return
     handler(state, **action.args)
     for h in state.hints:
@@ -61,12 +62,12 @@ def apply_inplace(state: GameState, action: Action) -> None:
 
 # --------------------------------------------------------------------- helpers
 
-def _log(state: GameState, text: str) -> None:
-    state.log.append(LogEntry(state.event_count, text))
+def _log(state: GameState, key: str, **params) -> None:
+    state.log.append(LogEntry(state.event_count, msg(key, **params)))
 
 
-def _hint(state: GameState, text: str) -> None:
-    state.hints.append(text)
+def _hint(state: GameState, key: str, **params) -> None:
+    state.hints.append(msg(key, **params))
 
 
 def _reveal_to_bench(state: GameState) -> None:
@@ -77,7 +78,7 @@ def _reveal_to_bench(state: GameState) -> None:
         t.legendary_upgrade = t.legendary_id
     state.bench.append(t)
     state.last_reveals.append(Reveal("titan", t.card_id, "bench"))
-    _log(state, f"{t.name} is revealed on the enemy bench.")
+    _log(state, "log.revealed_bench", name=t.name)
 
 
 def _enter_arena(state: GameState, role: str) -> None:
@@ -93,7 +94,7 @@ def _enter_arena(state: GameState, role: str) -> None:
     # A Titan revealed to the bench and moved into the arena at once is reported only once.
     state.last_reveals = [r for r in state.last_reveals if not (r.kind == "titan" and r.card_id == t.card_id)]
     state.last_reveals.append(Reveal("titan", t.card_id, "arena"))
-    _log(state, f"{t.name} enters the arena as enemy {role.capitalize()}.")
+    _log(state, "log.enters_arena", name=t.name, role=msg(f"role.{role}"))
     if not state.bench:
         _reveal_to_bench(state)
 
@@ -106,14 +107,14 @@ def _reveal_upgrades(state: GameState) -> None:
         revealed = list(state.upgrade_hand)
         state.upgrade_hand.clear()
         if len(revealed) > 1:
-            _hint(state, "Final fight: all remaining enemy Upgrades are revealed.")
+            _hint(state, "hint.final_all_upgrades")
     else:
         revealed = [state.upgrade_hand.pop(0)]
     state.active_upgrades += revealed
     state.new_upgrades = revealed
     for up in revealed:
         state.last_reveals.append(Reveal("upgrade", up))
-    _log(state, f"{len(revealed)} enemy Upgrade(s) revealed. They stay active for the rest of the game.")
+    _log(state, "log.upgrades_revealed", count=len(revealed))
 
 
 def _reset_turn(state: GameState) -> None:
@@ -126,7 +127,7 @@ def _reset_turn(state: GameState) -> None:
 def begin_game(state: GameState) -> None:
     if state.phase != "start":
         return
-    _log(state, "Game begins.")
+    _log(state, "log.game_begins")
     _enter_arena(state, "champion")
     _reveal_upgrades(state)
     state.phase = "fight_start"
@@ -138,7 +139,7 @@ def set_starter(state: GameState, side: str) -> None:
     state.phase = "combat"
     state.active_side = side  # type: ignore[assignment]
     state.turn_started = side == "players"
-    _log(state, f"Combat begins. {'The enemy' if side == 'enemy' else 'The players'} start.")
+    _log(state, f"log.combat_begins_{side}")
 
 
 def start_turn(state: GameState) -> None:
@@ -149,15 +150,15 @@ def start_turn(state: GameState) -> None:
     st = t.statuses
     dmg = start_of_turn_damage(st.poison, st.fire)
     if dmg:
-        parts = [f"Poison ({st.poison})"] * bool(st.poison) + [f"Fire ({st.fire})"] * bool(st.fire)
+        source = "both" if st.poison and st.fire else "poison" if st.poison else "fire"
         t.life = max((t.life or 0) - dmg, 0)
-        _log(state, f"{t.name} takes {dmg} damage from {' and '.join(parts)}.")
-        _hint(state, "Poison and Fire damage ignore Armor, Dodge, and Minion.")
+        _log(state, f"log.tick_{source}", name=t.name, dmg=dmg, poison=st.poison, fire=st.fire)
+        _hint(state, "hint.tick_ignores")
         if st.fire:
             st.fire += 1
-            _hint(state, f"Fire grows to {st.fire}.")
+            _hint(state, "hint.fire_grows", fire=st.fire)
     else:
-        _log(state, f"The enemy's turn starts ({t.name}).")
+        _log(state, "log.enemy_turn_starts", name=t.name)
     if (t.life or 0) <= 0:
         _end_fight(state, "enemy_defeated")
         return
@@ -168,7 +169,7 @@ def end_turn(state: GameState) -> None:
     if state.phase != "combat" or state.active_side is None:
         return
     ending = state.active_side
-    _log(state, "The enemy's turn ends." if ending == "enemy" else "The players' turn ends.")
+    _log(state, f"log.turn_ends_{ending}")
     state.active_side = "players" if ending == "enemy" else "enemy"
     state.turn_started = state.active_side == "players"
     if state.active_side == "players":
@@ -180,29 +181,29 @@ def end_turn(state: GameState) -> None:
 def damage(state: GameState, base: int = 0, bonus: int = 0, cancel: bool = False, replacement: int | None = None) -> None:
     t = state.arena
     if t is None or not state.in_fight():
-        _log(state, "Damage ignored: no enemy in the arena.")
+        _log(state, "log.damage_ignored")
         return
     calc = damage_pipeline(base, 0, bonus, cancel, t.armor, replacement)
     life = t.life or 0
     final, used = prevention(calc.final, life, t.statuses.dodge, t.statuses.minion)
-    steps = [f"base {base}"]
+    steps: list[Msg] = [msg("step.base", n=base)]
     if bonus:
-        steps.append(f"{bonus:+d} bonus")
+        steps.append(msg("step.bonus", n=f"{bonus:+d}"))
     if cancel:
-        steps.append("canceled")
+        steps.append(msg("step.canceled"))
     if calc.armor_reduced:
-        steps.append(f"-{calc.armor_reduced} Armor")
-        _hint(state, f"Armor {t.armor} reduced the damage from {calc.after_cancel} to {calc.after_armor}.")
+        steps.append(msg("step.armor", n=calc.armor_reduced))
+        _hint(state, "hint.armor_reduced", armor=t.armor, before=calc.after_cancel, after=calc.after_armor)
     if replacement is not None:
-        steps.append(f"replaced by {replacement}")
+        steps.append(msg("step.replaced", n=replacement))
     if used == "dodge":
         t.statuses.dodge -= 1
-        _hint(state, f"Dodge absorbed the damage. {t.name} loses 1 Dodge token.")
+        _hint(state, "hint.dodge_used", name=t.name)
     elif used == "minion":
         t.statuses.minion -= 1
-        _hint(state, f"Minion prevented the defeat. {t.name} loses 1 Minion token.")
+        _hint(state, "hint.minion_used", name=t.name)
     t.life = max(life - final, 0)
-    _log(state, f"{t.name} takes {final} damage ({', '.join(steps)}).")
+    _log(state, "log.damage", name=t.name, dmg=final, steps=steps)
     if t.life <= 0:
         _end_fight(state, "enemy_defeated")
 
@@ -213,7 +214,7 @@ def heal(state: GameState, amount: int) -> None:
         return
     before = t.life
     t.life = min(t.max_life, t.life + max(amount, 0))
-    _log(state, f"{t.name} heals {t.life - before} Life.")
+    _log(state, "log.heal", name=t.name, amount=t.life - before)
 
 
 def life_adjust(state: GameState, delta: int) -> None:
@@ -221,7 +222,7 @@ def life_adjust(state: GameState, delta: int) -> None:
     if t is None or t.life is None or not state.in_fight():
         return
     t.life = max(0, min(t.max_life, t.life + delta))
-    _log(state, f"Manual: {t.name} Life {delta:+d} (now {t.life}).")
+    _log(state, "log.life_adjust", name=t.name, delta=f"{delta:+d}", life=t.life)
     if t.life <= 0:
         _end_fight(state, "enemy_defeated")
 
@@ -238,9 +239,9 @@ def token(state: GameState, target: str, token: str, delta: int) -> None:
             if st.blessed_cursed == "none":
                 st.blessed_cursed = token  # type: ignore[assignment]
             elif st.blessed_cursed == token:
-                _hint(state, f"{t.name} already has {token.capitalize()}; it keeps the token it has.")
+                _hint(state, "hint.token_already", name=t.name, token=msg(f"token.{token}"))
             else:
-                _hint(state, f"{t.name} had {st.blessed_cursed.capitalize()}; the opposite token removes it instead.")
+                _hint(state, "hint.token_opposite", name=t.name, token=msg(f"token.{st.blessed_cursed}"))
                 st.blessed_cursed = "none"
         elif st.blessed_cursed == token:
             st.blessed_cursed = "none"
@@ -249,7 +250,7 @@ def token(state: GameState, target: str, token: str, delta: int) -> None:
         setattr(st, token, max(0, before + delta))
     else:
         return
-    _log(state, f"{t.name}: {token} {delta:+d}.")
+    _log(state, "log.token", name=t.name, token=msg(f"token.{token}"), delta=f"{delta:+d}")
 
 
 def flag(state: GameState, target: str, flag: str, value: bool) -> None:
@@ -257,7 +258,7 @@ def flag(state: GameState, target: str, flag: str, value: bool) -> None:
     if t is None or flag not in ("charged", "ultimate_form"):
         return
     setattr(t, flag, bool(value))
-    _log(state, f"{t.name}: {flag.replace('_', ' ')} {'on' if value else 'off'}.")
+    _log(state, f"log.flag_{'on' if value else 'off'}", name=t.name, flag=msg(f"flag.{flag}"))
 
 
 def speed(state: GameState, value: int | None) -> None:
@@ -265,7 +266,7 @@ def speed(state: GameState, value: int | None) -> None:
     if t is None:
         return
     t.speed_override = value
-    _log(state, f"{t.name} Speed is now {t.speed}.")
+    _log(state, "log.speed", name=t.name, speed=t.speed)
 
 
 # ------------------------------------------------------------ fight endings
@@ -282,7 +283,7 @@ def _end_fight(state: GameState, reason: str) -> None:
         state.defeated.append(t.card_id)
         state.arena = None
         state.enemy_role = None
-        _log(state, f"{t.name} is defeated.")
+        _log(state, "log.enemy_defeated", name=t.name)
     elif reason == "enemy_returned":
         t.life = None
         t.charged = False
@@ -290,26 +291,26 @@ def _end_fight(state: GameState, reason: str) -> None:
         state.bench.insert(0, t)
         state.arena = None
         state.enemy_role = None
-        _hint(state, "The enemy Titan returned to its bench. It fights next, and no new enemy Upgrade is revealed.")
-        _log(state, f"{t.name} returns to the enemy bench and heals to full Life.")
+        _hint(state, "hint.enemy_returned")
+        _log(state, "log.enemy_returned", name=t.name)
     else:
         t.statuses.fire = 0
         t.charged = False
         state.enemy_role = "champion"
-        _log(state, f"{t.name} wins the fight and stays as enemy Champion.")
+        _log(state, "log.enemy_wins_fight", name=t.name)
     if reason in ("player_defeated", "both_defeated"):
         state.player_titans_left = max(state.player_titans_left - 1, 0)
-        _log(state, f"A player Titan is defeated ({state.player_titans_left} left).")
+        _log(state, "log.player_defeated", left=state.player_titans_left)
     if reason == "both_defeated":
-        _hint(state, "Both Titans were defeated at the same time; nobody gets the victory reward.")
+        _hint(state, "hint.both_defeated")
     state.result = result
     _reset_turn(state)
     if state.player_titans_left == 0:
         state.phase = "defeat"
-        _log(state, "All player Titans are defeated. The enemy wins.")
+        _log(state, "log.defeat")
     elif state.enemy_remaining() == 0:
         state.phase = "victory"
-        _log(state, "Every enemy Titan is defeated. The players win!")
+        _log(state, "log.victory")
     else:
         state.phase = "cleanup"
 
@@ -333,8 +334,8 @@ def swap(state: GameState, with_id: str) -> None:
     incoming.life = incoming.max_life
     incoming.charged = False
     state.arena = incoming
-    _log(state, f"{t.name} swaps with {incoming.name}; the fight continues.")
-    _hint(state, "Swapping is not a new fight, so Start of Fight abilities do not trigger again.")
+    _log(state, "log.swap", name=t.name, other=incoming.name)
+    _hint(state, "hint.swap")
 
 
 def advance_fight(state: GameState) -> None:
@@ -359,11 +360,11 @@ def advance_fight(state: GameState) -> None:
 
 def add_enemy_upgrade(state: GameState, card_id: str) -> None:
     state.upgrade_hand.append(card_id)
-    _log(state, "A face-down Upgrade is added to the enemy hand.")
+    _log(state, "log.upgrade_added")
 
 
 def note(state: GameState, text: str) -> None:
-    _log(state, f"Note: {text}")
+    _log(state, "log.note", text=text)
 
 
 HANDLERS: dict[str, Callable[..., None]] = {

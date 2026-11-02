@@ -62,6 +62,8 @@ function rnd(a, b) { return a + Math.random() * (b - a); }
 function pick(list) { return list[Math.floor(Math.random() * list.length)]; }
 function esc(s) { const d = D.createElement('div'); d.textContent = String(s == null ? '' : s); return d.innerHTML; }
 function q(sel) { return D.querySelector(sel); }
+// Overlay text in the app language, sent with each payload; English fallback.
+function tx(key, fallback) { return (FX.texts && FX.texts[key]) || fallback; }
 function byId(id) { return id ? q('[data-fx-id="' + CSS.escape(id) + '"]') || q('[data-fx-target="' + CSS.escape(id) + '"]') : null; }
 function toRect(r) { return r && { x: r.left !== undefined ? r.left : r.x, y: r.top !== undefined ? r.top : r.y, w: r.width !== undefined ? r.width : r.w, h: r.height !== undefined ? r.height : r.h }; }
 function rectOf(el) { const r = el && el.getBoundingClientRect(); return r && r.width ? toRect(r) : null; }
@@ -311,6 +313,7 @@ function slam(el, delay, base) {
 // ------------------------------------------------------------- the timeline
 FX.receive = function (payload) {
   settings(payload.settings);
+  FX.texts = payload.texts || {};
   FX.assets = payload.assets || {};
   const fresh = (payload.cues || []).filter((c) => !FX.seen.has(c.id));
   fresh.forEach((c) => FX.seen.add(c.id));
@@ -522,7 +525,7 @@ HANDLERS.lunge = async (c) => {
 HANDLERS.combo = async (c) => {
   const r = imgRect(cardEl(c.target));
   if (!r) return;
-  await word(c.params.actions + ' ACTIONS!', r.x + r.w * 0.5, r.y + r.h * 0.12, { burst: '#E63946', color: '#FFD400', size: 3.2, rot: -4, dur: 1000 });
+  await word(tx('actions', '{n} ACTIONS!').replace('{n}', c.params.actions), r.x + r.w * 0.5, r.y + r.h * 0.12, { burst: '#E63946', color: '#FFD400', size: 3.2, rot: -4, dur: 1000 });
 };
 
 HANDLERS.token = async (c) => {
@@ -535,7 +538,7 @@ HANDLERS.token = async (c) => {
   const r = imgRect(cardEl(c.target));
   if (!r) return;
   const sign = p.delta > 0 ? '+' : '';
-  const t = div('ft-fx-num ft-fx-small', esc(sign + p.delta + ' ' + String(p.token).toUpperCase()), { left: r.x + 20 + 'px', top: r.y + r.h * 0.3 + 'px' });
+  const t = div('ft-fx-num ft-fx-small', esc(sign + p.delta + ' ' + tx('token.' + p.token, String(p.token)).toUpperCase()), { left: r.x + 20 + 'px', top: r.y + r.h * 0.3 + 'px' });
   await anim(t, [{ opacity: 0, transform: 'translate(-50%,-50%) scale(.6)' }, { opacity: 1, transform: 'translate(-50%,-80%) scale(1)', offset: 0.3 },
     { opacity: 0, transform: 'translate(-50%,-160%)' }], { duration: 900 }).then(() => t.remove());
 };
@@ -580,7 +583,7 @@ HANDLERS.taunt = async (c) => { bubble(c.params.text, imgRect(cardEl(c.target)))
 HANDLERS.turn_banner = async (c) => {
   if (C.reduced) return;
   const side = c.params.side === 'enemy' ? 'enemy' : 'players';
-  const b = div('ft-fx-banner ' + side, side === 'enemy' ? 'ENEMY TURN' : 'YOUR TURN');
+  const b = div('ft-fx-banner ' + side, esc(side === 'enemy' ? tx('enemy_turn', 'ENEMY TURN') : tx('your_turn', 'YOUR TURN')));
   sfx('whoosh');
   // Fast swish in that brakes hard, slow drift while readable, then a fast exit.
   await anim(b, [{ transform: 'skewY(-6deg) translateX(-110%)', easing: 'cubic-bezier(.15,.9,.3,1)' },

@@ -9,11 +9,11 @@ session.init()
 inject_theme()
 
 pages = {
-    "setup": st.Page(setup_page.render, title="Setup", icon="⚙", url_path="setup", default=True),
-    "draft": st.Page(draft_page.render, title="Draft", icon="🃏", url_path="draft"),
-    "arena": st.Page(arena_page.render, title="Enemy", icon="⚔", url_path="arena"),
-    "log": st.Page(log_page.render, title="Log and save", icon="📜", url_path="log"),
-    "catalog": st.Page(catalog_editor.render, title="Catalog editor", icon="🗂", url_path="catalog"),
+    "setup": st.Page(setup_page.render, title=session.tr("nav.setup"), icon="⚙", url_path="setup", default=True),
+    "draft": st.Page(draft_page.render, title=session.tr("nav.draft"), icon="🃏", url_path="draft"),
+    "arena": st.Page(arena_page.render, title=session.tr("nav.arena"), icon="⚔", url_path="arena"),
+    "log": st.Page(log_page.render, title=session.tr("nav.log"), icon="📜", url_path="log"),
+    "catalog": st.Page(catalog_editor.render, title=session.tr("nav.catalog"), icon="🗂", url_path="catalog"),
 }
 st.session_state.pages = pages
 

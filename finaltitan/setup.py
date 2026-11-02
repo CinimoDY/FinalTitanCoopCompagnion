@@ -9,6 +9,7 @@ from typing import Any
 import yaml
 
 from .catalog import DATA_DIR, Catalog
+from .i18n import Msg, msg
 
 DIFFICULTIES = ["Easy", "Standard", "Hard", "Very Hard", "Insane"]
 # enemy Titans per difficulty, indexed by player count - 1
@@ -91,10 +92,11 @@ def _in_scope(card: Any, setup: GameSetup) -> bool:
     return setup.advanced or not card.advanced
 
 
-def build_enemy(setup: GameSetup, catalog: Catalog, presets: dict[str, dict[str, Any]]) -> list[str]:
-    """Fills setup.enemy_titans and enemy_upgrades. Returns warnings for the players."""
+def build_enemy(setup: GameSetup, catalog: Catalog, presets: dict[str, dict[str, Any]]) -> list[Msg]:
+    """Fills setup.enemy_titans and enemy_upgrades. Returns warnings for the players.
+    Raises ValueError with a Msg argument when the pool is too small."""
     rng = random.Random(setup.seed)
-    warnings: list[str] = []
+    warnings: list[Msg] = []
     n = setup.enemy_count()
     drafted = setup.drafted()
     titan_pool = sorted(
@@ -112,14 +114,14 @@ def build_enemy(setup: GameSetup, catalog: Catalog, presets: dict[str, dict[str,
             if found:
                 titans.append(found[0])
             else:
-                warnings.append("A preset Titan has no image in assets and was replaced by a random Titan.")
+                warnings.append(msg("setup.warn_preset_titan"))
                 titans.append("")
         for name in deck["upgrades"]:
             found = catalog.find_card(name, "upgrade")
             if found:
                 upgrades.append(found[0])
             else:
-                warnings.append("A preset Upgrade has no image in assets and was replaced by a random Upgrade.")
+                warnings.append(msg("setup.warn_preset_upgrade"))
                 upgrades.append("")
 
     free_titans = [t for t in titan_pool if t not in titans and t not in drafted]
@@ -129,10 +131,10 @@ def build_enemy(setup: GameSetup, catalog: Catalog, presets: dict[str, dict[str,
 
     if not deck:
         if len(free_titans) < n:
-            raise ValueError(f"Not enough enemy-usable Titans in the pool ({len(free_titans)} for {n}).")
+            raise ValueError(msg("setup.err_titans", have=len(free_titans), need=n))
         titans = free_titans[:n]
         if len(free_upgrades) < n:
-            raise ValueError(f"Not enough enemy-usable Upgrades in the pool ({len(free_upgrades)} for {n}).")
+            raise ValueError(msg("setup.err_upgrades", have=len(free_upgrades), need=n))
         upgrades = free_upgrades[:n]
     else:
         titans = [t or free_titans.pop() for t in titans]
