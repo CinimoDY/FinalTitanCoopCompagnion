@@ -28,12 +28,55 @@
     if (!(payload.extra && payload.extra.pending_pick) && !picking) removeDice(true);
   };
 
+  // A closed cube with smooth rounded edges, built from flat parts around the center:
+  // 6 faces (the card icons), 12 edges of EDGE_STEPS strips each (a quarter cylinder of radius r), 8 corner caps
+  // (the sphere octants) and a black core, so no gap ever shows the stage through the die.
+  const EDGE_STEPS = 6;
+  const ROT_FACE = { front: '', back: 'rotateY(180deg)', right: 'rotateY(90deg)', left: 'rotateY(-90deg)', top: 'rotateX(90deg)', bottom: 'rotateX(-90deg)' };
+  const AXIS = ['', 'rotateZ(90deg)', 'rotateY(90deg)'];  // edges along x, y, z
+
+  function part(cls, left, top, w, h, transform) {
+    return '<i class="' + cls + '" style="left:' + left.toFixed(2) + 'px;top:' + top.toFixed(2) + 'px;width:' + w.toFixed(2) + 'px;height:' + h.toFixed(2) + 'px;transform:' + transform + '"></i>';
+  }
+
+  function cubeParts(size) {
+    const r = size * 0.13, c = size / 2 - r, half = size / 2;
+    const flat = size - 2 * r;  // side of the flat part of a face
+    const step = 90 / EDGE_STEPS;
+    const out = [];
+    // Edge strips: tangent to the quarter circle, each one a little wider than its arc so neighbors overlap.
+    const sw = 2 * r * Math.sin((step / 2) * Math.PI / 180) + 1.2, reach = r * Math.cos((step / 2) * Math.PI / 180);
+    AXIS.forEach((axis) => {
+      for (let k = 0; k < 4; k++) {
+        for (let i = 0; i < EDGE_STEPS; i++) {
+          const a = step / 2 + i * step;
+          out.push(part('ft-die-edge e' + i, half - (flat + 1.2) / 2, half - sw / 2, flat + 1.2, sw,
+            (axis ? axis + ' ' : '') + 'rotateX(' + k * 90 + 'deg) translate3d(0,' + -c + 'px,' + c + 'px) rotateX(' + a + 'deg) translateZ(' + reach + 'px)'));
+        }
+      }
+    });
+    // Corner caps: a disc on the diagonal plane through the three strip ends closes the last gap.
+    const cap = r * 0.84;
+    [-1, 1].forEach((sx) => [-1, 1].forEach((sy) => [-1, 1].forEach((sz) => {
+      const yaw = Math.atan2(sx, sz) * 180 / Math.PI, pitch = Math.asin(-sy / Math.sqrt(3)) * 180 / Math.PI;
+      out.push(part('ft-die-corner', half - cap, half - cap, cap * 2, cap * 2,
+        'translate3d(' + sx * c + 'px,' + sy * c + 'px,' + sz * c + 'px) rotateY(' + yaw + 'deg) rotateX(' + pitch + 'deg) translateZ(' + r * 0.577 + 'px)'));
+    })));
+    // Core: three black squares through the center.
+    const core = size - r;
+    ['', 'rotateX(90deg)', 'rotateY(90deg)'].forEach((rot) => out.push(part('ft-die-core', half - core / 2, half - core / 2, core, core, rot || 'none')));
+    return { html: out.join(''), flat, half };
+  }
+
   function cubeEl(face, kind, size) {
+    const g = cubeParts(size);
+    const f = g.flat + 1.2;
     const sides = SIDES.map(([side, id]) => {
       const img = faceUrl(id) && id !== 'miss' ? '<img alt="" src="' + esc(faceUrl(id)) + '">' : '';
-      return '<div class="ft-die-face s-' + side + '">' + img + (kind === 'cursed' ? CRACKS : '') + '<i class="sheen"></i></div>';
+      return '<div class="ft-die-face s-' + side + '" style="left:' + (g.half - f / 2).toFixed(2) + 'px;top:' + (g.half - f / 2).toFixed(2) + 'px;width:' + f.toFixed(2) + 'px;height:' + f.toFixed(2) +
+        'px;transform:' + ROT_FACE[side] + ' translateZ(' + g.half + 'px)">' + img + (kind === 'cursed' ? CRACKS : '') + '<i class="sheen"></i></div>';
     }).join('');
-    return '<div class="ft-die-fly"><div class="ft-die-tilt"><div class="ft-die-cube">' + sides + '</div></div></div>';
+    return '<div class="ft-die-fly"><div class="ft-die-tilt"><div class="ft-die-cube">' + g.html + sides + '</div></div></div>';
   }
 
   function flatEl(face) {
