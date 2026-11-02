@@ -83,7 +83,7 @@ def test_blessed_removed_poofs():
 
 
 def test_charge_off_on_enemy_turn_is_the_ultimate():
-    s = start(None, act(ev.SET_STARTER, side="enemy"), act(ev.START_TURN))
+    s = start(None, act(ev.SET_STARTER, side="enemy"))
     cid = s.arena.card_id
     s, cues = step(s, ev.FLAG, target=cid, flag="charged", value=True)
     assert kinds(cues) == ["charge_on"]
@@ -102,12 +102,12 @@ def test_set_starter_plays_vs_then_turn_banner():
 
 
 def test_start_turn_lunges_ticks_and_counts_actions():
-    s = start(None, act(ev.SET_STARTER, side="enemy"))
+    s = start(None, act(ev.SET_STARTER, side="players"))
     cid = s.arena.card_id
     s, _ = step(s, ev.TOKEN, target=cid, token="fire", delta=1)
     s, _ = step(s, ev.TOKEN, target=cid, token="action", delta=1)
-    _, cues = step(s, ev.START_TURN)
-    assert kinds(cues) == ["lunge", "tick", "hit", "token", "combo"]
+    _, cues = step(s, ev.END_TURN)
+    assert kinds(cues) == ["turn_banner", "lunge", "tick", "hit", "token", "combo"]
     assert first(cues, "tick").params["word"] == "SIZZLE!"
     assert "word" not in first(cues, "hit").params
     assert first(cues, "combo").params["actions"] == 2
@@ -167,11 +167,11 @@ def test_ko_styles():
 
 
 def test_fire_tick_kill_dissolves():
-    s = start(None, act(ev.SET_STARTER, side="enemy"))
+    s = start(None, act(ev.SET_STARTER, side="players"))
     cid = s.arena.card_id
     s, _ = step(s, ev.LIFE_ADJUST, delta=-(s.arena.life - 1))
     s, _ = step(s, ev.TOKEN, target=cid, token="fire", delta=1)
-    _, cues = step(s, ev.START_TURN)
+    _, cues = step(s, ev.END_TURN)
     ko = first(cues, "ko")
     assert ko.params["style"] == "dissolve" and ko.params["color"] == "fire"
 

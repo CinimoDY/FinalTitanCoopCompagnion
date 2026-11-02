@@ -1,6 +1,6 @@
 # Guide texts, keyed by step id. Rules are paraphrased; card effects are never described.
 # Every text is given per language ({en: ..., de: ...}); lists of lines and confirms are given per language as a whole.
-# Placeholders: {enemy} {speed} {actions} {left} {total} {tick_line} {dice_line} {legendary_line} {next_line}
+# Placeholders: {enemy} {speed} {actions} {left} {total} {dice_line} {legendary_line} {next_line}
 steps:
   setup:
     actor: all
@@ -21,7 +21,7 @@ steps:
       de: ["Bestätigen: Upgrade-Karten verteilt", "Bestätigen: Titanen ausgelegt"]
     why:
       en: "The app plays the enemy. You handle your own Titans, tokens, and cards on the table."
-      de: "Die App spielt den Gegner. Eure eigenen Titanen, Marker und Karten verwaltet ihr am Tisch."
+      de: "Die App spielt den Gegner. Eure eigenen Titanen, Token und Karten verwaltet ihr am Tisch."
     primary: [[{en: "Start game", de: "Spiel starten"}, "begin_game", {}]]
     refs: [[{en: "Co-op: Game Setup", de: "Koop: Spielaufbau"}, "design/final-titan-coop-rules.md"]]
   fight_start_champion:
@@ -34,16 +34,16 @@ steps:
         - "Resolve When Revealed effects, then Start of Fight abilities: the starting side first. Enemy Upgrades on the right count for the enemy."
         - "Enemy Speed is {speed}. Higher Speed starts; on a tie, your Challenger starts."
       de:
-        - "{enemy} ist der gegnerische Champion. Entscheidet gemeinsam, welcher Spieler einen Titanen von seiner Bank als Herausforderer schickt."
-        - "Alle Spieler dürfen Upgrade-Karten verdeckt für diesen Titanen spielen und sie dann gemeinsam aufdecken."
-        - "Handelt Beim-Aufdecken-Effekte ab, dann Kampfbeginn-Fähigkeiten: zuerst die beginnende Seite. Gegnerische Upgrades rechts zählen für den Gegner."
-        - "Das Tempo des Gegners ist {speed}. Höheres Tempo beginnt; bei Gleichstand beginnt euer Herausforderer."
+        - "{enemy} ist der gegnerische Champion. Entscheidet gemeinsam, welcher Spieler einen Titan von seiner Bank als Herausforderer schickt."
+        - "Alle Spieler dürfen Upgrade-Karten verdeckt für diesen Titan spielen und sie dann gemeinsam aufdecken."
+        - "Handelt „Beim Aufdecken“-Effekte ab, dann „Kampfbeginn“-Fähigkeiten: zuerst die beginnende Seite. Gegnerische Upgrades rechts zählen für den Gegner."
+        - "Die Geschwindigkeit des Gegners ist {speed}. Höhere Geschwindigkeit beginnt; bei Gleichstand beginnt euer Herausforderer."
     confirms:
       en: ["Confirm: Challenger sent", "Confirm: Upgrades revealed", "Confirm: effects resolved"]
       de: ["Bestätigen: Herausforderer geschickt", "Bestätigen: Upgrades aufgedeckt", "Bestätigen: Effekte abgehandelt"]
     why:
       en: "When the enemy is Champion, the players do not choose SKIP or FIGHT. They pick one Titan from any bench."
-      de: "Ist der Gegner Champion, wählen die Spieler nicht ÜBERSPRINGEN oder KÄMPFEN. Sie wählen einen Titanen von einer beliebigen Bank."
+      de: "Ist der Gegner Champion, wählen die Spieler nicht PASSEN oder KÄMPFEN. Sie wählen einen Titan von einer beliebigen Bank."
     primary: [[{en: "Enemy starts", de: "Gegner beginnt"}, "set_starter", {side: enemy}], [{en: "We start", de: "Wir beginnen"}, "set_starter", {side: players}]]
     refs: [[{en: "Co-op: Phase 1", de: "Koop: Phase 1"}, "design/final-titan-coop-rules.md"]]
   fight_start_challenger:
@@ -60,48 +60,35 @@ steps:
       de:
         - "{enemy} tritt als gegnerischer Herausforderer gegen euren Champion an."
         - "Alle Spieler dürfen Upgrade-Karten verdeckt für euren Champion spielen und sie dann gemeinsam aufdecken."
-        - "Handelt Beim-Aufdecken-Effekte ab, dann Kampfbeginn-Fähigkeiten: zuerst die beginnende Seite. Gegnerische Upgrades rechts zählen für den Gegner."
-        - "Das Tempo des Gegners ist {speed}. Höheres Tempo beginnt; bei Gleichstand beginnt der gegnerische Herausforderer."
+        - "Handelt „Beim Aufdecken“-Effekte ab, dann „Kampfbeginn“-Fähigkeiten: zuerst die beginnende Seite. Gegnerische Upgrades rechts zählen für den Gegner."
+        - "Die Geschwindigkeit des Gegners ist {speed}. Höhere Geschwindigkeit beginnt; bei Gleichstand beginnt der gegnerische Herausforderer."
     confirms:
       en: ["Confirm: ready to fight", "Confirm: Upgrades revealed", "Confirm: effects resolved"]
       de: ["Bestätigen: bereit zum Kampf", "Bestätigen: Upgrades aufgedeckt", "Bestätigen: Effekte abgehandelt"]
     why:
       en: "Your Champion stays in the arena with its current Life. The next enemy in the queue challenges it."
-      de: "Euer Champion bleibt mit seinem aktuellen Leben in der Arena. Der nächste Gegner in der Reihe fordert ihn heraus."
+      de: "Euer Champion bleibt mit seinen aktuellen Lebenspunkten in der Arena. Der nächste Gegner in der Reihe fordert ihn heraus."
     primary: [[{en: "Enemy starts", de: "Gegner beginnt"}, "set_starter", {side: enemy}], [{en: "We start", de: "Wir beginnen"}, "set_starter", {side: players}]]
     refs: [[{en: "Co-op: Phase 1", de: "Koop: Phase 1"}, "design/final-titan-coop-rules.md"]]
-  enemy_turn_start:
-    actor: enemy
-    short: ""
-    lines:
-      en:
-        - "The enemy's turn. Resolve any start-of-turn abilities on {enemy} and the enemy Upgrades."
-        - "{tick_line}"
-      de:
-        - "Der Zug des Gegners. Handelt Zugbeginn-Fähigkeiten von {enemy} und den gegnerischen Upgrades ab."
-        - "{tick_line}"
-    why:
-      en: "Poison and Fire damage ignore Armor, Dodge, and Minion. Fire then grows by one token."
-      de: "Gift- und Feuerschaden ignorieren Rüstung, Ausweichen und Diener. Danach wächst Feuer um einen Marker."
-    primary: [[{en: "Start enemy turn", de: "Gegnerzug starten"}, "start_turn", {}]]
-    refs: [[{en: "Combat", de: "Kampf"}, "design/rules.md"]]
   enemy_turn:
     actor: enemy
     short: ""
     lines:
       en:
+        - "Resolve any start-of-turn abilities on {enemy} and the enemy Upgrades."
         - "Any player: roll one die for the enemy for each of its Actions ({actions} this turn). Look each result up on {enemy}'s Attack Chart and resolve it against your Titan."
         - "{dice_line}"
         - "Rolled Charge? Flip the Charge token with the Charge switch below the enemy card and take another Action. If it was already flipped, resolve the Ultimate, then turn it back to gray."
         - "If a card makes the enemy decide, choose what is best for the enemy."
       de:
-        - "Ein beliebiger Spieler würfelt für jede Aktion des Gegners einen Würfel ({actions} in diesem Zug). Schlagt jedes Ergebnis in der Angriffstabelle von {enemy} nach und handelt es gegen euren Titanen ab."
+        - "Handelt Zugbeginn-Fähigkeiten von {enemy} und den gegnerischen Upgrades ab."
+        - "Ein beliebiger Spieler würfelt für jede Aktion des Gegners einen Würfel ({actions} in diesem Zug). Schlagt jedes Ergebnis in den Angriffswerten von {enemy} nach und handelt es gegen euren Titan ab."
         - "{dice_line}"
-        - "Aufladung gewürfelt? Dreht den Aufladungsmarker mit dem Schalter unter der Gegnerkarte um und führt eine weitere Aktion aus. War er schon umgedreht, handelt das Ultimate ab und stellt ihn dann wieder auf grau."
+        - "Wut gewürfelt? Dreht den Wut-Token mit dem Schalter unter der Gegnerkarte um und führt eine weitere Aktion aus. War er schon umgedreht, handelt den Ultimate ab und stellt ihn dann wieder auf grau."
         - "Muss der Gegner laut einer Karte entscheiden, wählt das, was für den Gegner am besten ist."
     why:
       en: "The app never rolls dice and does not need the result. You only enter what it has to track: Life, tokens, and Charge."
-      de: "Die App würfelt nie und braucht das Ergebnis nicht. Ihr gebt nur ein, was sie verfolgen muss: Leben, Marker und Aufladung."
+      de: "Die App würfelt nie und braucht das Ergebnis nicht. Ihr gebt nur ein, was sie verfolgen muss: Lebenspunkte, Token und Wut."
     primary: [[{en: "End enemy turn", de: "Gegnerzug beenden"}, "end_turn", {}]]
     refs: [[{en: "Co-op: Enemy-Team Clarifications", de: "Koop: Klarstellungen zum Gegnerteam"}, "design/final-titan-coop-rules.md"]]
   players_turn:
@@ -113,10 +100,10 @@ steps:
         - "Enter everything that affects the enemy with the controls below: damage, healing, tokens, or a fight end."
       de:
         - "Euer Zug: Spielt ihn wie gewohnt am Tisch."
-        - "Gebt alles, was den Gegner betrifft, mit den Bedienelementen unten ein: Schaden, Heilung, Marker oder ein Kampfende."
+        - "Gebt alles, was den Gegner betrifft, mit den Bedienelementen unten ein: Schaden, Heilung, Token oder ein Kampfende."
     why:
       en: "Damage you enter is reduced by the enemy's Armor, then Dodge and Minion apply automatically. Add your own Power tokens as bonus."
-      de: "Eingegebener Schaden wird um die Rüstung des Gegners verringert, danach wirken Ausweichen und Diener automatisch. Eure eigenen Stärkemarker gebt ihr als Bonus ein."
+      de: "Eingegebener Schaden wird um die Rüstung des Gegners verringert, danach wirken Ausweichen und Diener automatisch. Eure eigenen Stärke-Token gebt ihr als Bonus ein."
     primary: [[{en: "End our turn", de: "Unseren Zug beenden"}, "end_turn", {}]]
   cleanup_enemy_defeated:
     actor: all
@@ -133,8 +120,8 @@ steps:
       de:
         - "{enemy} ist besiegt!"
         - "**Belohnung:** Der Spieler, dessen Titan gewonnen hat, zieht 1 Upgrade-Karte. {legendary_line}"
-        - "**Euer Titan** bleibt mit seinem aktuellen Leben Champion."
-        - "**Aufräumen:** Entfernt seine Feuermarker, stellt seine Aufladung auf grau und werft die gespielten Upgrades ab."
+        - "**Euer Titan** bleibt mit seinen aktuellen Lebenspunkten Champion."
+        - "**Aufräumen:** Entfernt seine Feuer-Token, stellt seine Wut auf grau und werft die gespielten Upgrades ab."
         - "{next_line}"
     primary: [[{en: "Continue", de: "Weiter"}, "advance_fight", {}]]
     refs: [[{en: "Fight Clean-up", de: "Aufräumen nach dem Kampf"}, "design/rules.md"]]
@@ -151,8 +138,8 @@ steps:
         - "{next_line}"
       de:
         - "Euer Titan ist besiegt."
-        - "**Werft ihn ab** mit seinen Markern und gespielten Upgrades. **{left} von {total}** Titanen übrig."
-        - "**{enemy}** bleibt mit seinem aktuellen Leben gegnerischer Champion. Seine Feuermarker werden entfernt und seine Aufladung wird grau."
+        - "**Werft ihn ab** mit seinen Token und gespielten Upgrades. **{left} von {total}** Titanen übrig."
+        - "**{enemy}** bleibt mit seinen aktuellen Lebenspunkten gegnerischer Champion. Seine Feuer-Token werden entfernt und seine Wut wird grau."
         - "{next_line}"
     primary: [[{en: "Continue", de: "Weiter"}, "advance_fight", {}]]
     refs: [[{en: "Fight Clean-up", de: "Aufräumen nach dem Kampf"}, "design/rules.md"]]
@@ -169,7 +156,7 @@ steps:
         - "{next_line}"
       de:
         - "Beide Titanen sind besiegt!"
-        - "**Werft** euren Titanen und die gespielten Upgrades **ab**. Niemand zieht eine Belohnung."
+        - "**Werft** euren Titan und die gespielten Upgrades **ab**. Niemand zieht eine Belohnung."
         - "**{left} von {total}** Titanen übrig."
         - "{next_line}"
     primary: [[{en: "Continue", de: "Weiter"}, "advance_fight", {}]]
@@ -186,7 +173,7 @@ steps:
         - "**Next:** {enemy} fights again. No enemy Upgrade is revealed."
       de:
         - "{enemy} ist auf seine Bank zurückgekehrt!"
-        - "Er heilt auf volles Leben. **Belohnung:** Der Spieler, dessen Titan geblieben ist, zieht 1 Upgrade-Karte."
+        - "Er heilt sich vollständig. **Belohnung:** Der Spieler, dessen Titan geblieben ist, zieht 1 Upgrade-Karte."
         - "**Als Nächstes:** {enemy} kämpft erneut. Es wird kein gegnerisches Upgrade aufgedeckt."
     primary: [[{en: "Continue", de: "Weiter"}, "advance_fight", {}]]
     refs: [[{en: "Returning to the Bench", de: "Rückkehr auf die Bank"}, "design/rules.md"]]
@@ -202,7 +189,7 @@ steps:
         - "{next_line}"
       de:
         - "Euer Titan ist auf seine Bank zurückgekehrt."
-        - "Er heilt auf volles Leben. **{enemy}** gewinnt und bleibt gegnerischer Champion."
+        - "Er heilt sich vollständig. **{enemy}** gewinnt und bleibt gegnerischer Champion."
         - "{next_line}"
     primary: [[{en: "Continue", de: "Weiter"}, "advance_fight", {}]]
     refs: [[{en: "Returning to the Bench", de: "Rückkehr auf die Bank"}, "design/rules.md"]]

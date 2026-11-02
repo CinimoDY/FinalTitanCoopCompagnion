@@ -12,7 +12,7 @@
   --ft-ticker-h: 34px;
   --ft-gap: 10px;
   --ft-screen-h: calc(100dvh - var(--ft-top) - 14px);
-  --ft-stage-h: calc(var(--ft-screen-h) - var(--ft-hud-h) - var(--ft-ticker-h) - 3 * var(--ft-gap));
+  --ft-stage-h: calc(var(--ft-screen-h) - var(--ft-hud-h) - var(--ft-ticker-h) - 4 * var(--ft-gap));
 }
 
 @font-face { font-family: 'Bangers'; src: url('app/static/fonts/Bangers.ttf') format('truetype'); font-display: swap; }
@@ -98,10 +98,10 @@ div[class*="_lang_"][class*="_on"] .ft-flag-name { color: var(--ft-yellow); }
 /* ===================================================== fight screen grid (§4.4) */
 .st-key-ft_screen {
   display: grid !important;
-  grid-template-columns: minmax(0, 27fr) minmax(0, 40fr) minmax(0, 33fr);
-  grid-template-rows: var(--ft-hud-h) minmax(0, 44fr) minmax(0, 56fr) var(--ft-ticker-h);
-  grid-template-areas: "hud hud hud" "caption stage side" "pad stage upgrades" "ticker ticker ticker";
-  gap: var(--ft-gap) !important;
+  grid-template-columns: minmax(0, 32fr) minmax(0, 40fr) minmax(0, 28fr);
+  grid-template-rows: var(--ft-hud-h) minmax(0, 44fr) minmax(0, 56fr) auto var(--ft-ticker-h);
+  grid-template-areas: "hud hud hud" "caption stage side" "caption stage upgrades" "pad stage upgrades" "ticker ticker ticker";
+  gap: var(--ft-gap) !important; column-gap: 28px !important;
   flex: none !important;
   height: var(--ft-screen-h) !important; overflow: hidden !important;
 }
@@ -225,7 +225,7 @@ div[class*="_lang_"][class*="_on"] .ft-flag-name { color: var(--ft-yellow); }
 .ft-side-col { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; min-width: 0; }
 .ft-zone-label { font-family: var(--ft-head); letter-spacing: .08em; color: var(--ft-dim); font-size: .95rem; white-space: nowrap; }
 .ft-zone-label b { color: var(--ft-text); }
-.ft-side-row .ft-card.next .ft-img { max-height: calc(100cqh - 40px); }
+.ft-side-row .ft-card.next .ft-img { max-height: calc(75cqh - 40px); }
 .ft-defeated { display: flex; flex-wrap: wrap; gap: 4px; max-width: 120px; min-width: 60px; min-height: 54px; }
 .ft-defeated .ft-img { max-height: 54px !important; filter: grayscale(1) brightness(.5); box-shadow: none !important; }
 .ft-next-empty { width: 110px; aspect-ratio: 744 / 1039; border: 3px dashed var(--ft-line); border-radius: 8px; }

@@ -308,7 +308,6 @@ hint.card_wins: "When a card contradicts the rules, the card wins."
 
 # ------------------------------------------------------------------ guide context lines
 guide.legendary_line: "It had a Legendary Upgrade: that player also takes it."
-guide.tick_line: "Poison {poison} and Fire {fire} deal {dmg} damage to the enemy now."
 guide.dice_blessed: "The enemy is Blessed: roll two dice per Action and use the one that is best for the enemy."
 guide.dice_cursed: "The enemy is Cursed: roll two dice per Action; you choose which one counts. On doubles, remove the token."
 guide.reveal_one: "A new enemy Upgrade is revealed"

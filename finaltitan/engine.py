@@ -140,6 +140,8 @@ def set_starter(state: GameState, side: str) -> None:
     state.active_side = side  # type: ignore[assignment]
     state.turn_started = side == "players"
     _log(state, f"log.combat_begins_{side}")
+    if side == "enemy":
+        start_turn(state)
 
 
 def start_turn(state: GameState) -> None:
@@ -174,6 +176,8 @@ def end_turn(state: GameState) -> None:
     state.turn_started = state.active_side == "players"
     if state.active_side == "players":
         state.turn_no += 1
+    else:
+        start_turn(state)
 
 
 # --------------------------------------------------------------------- damage

@@ -103,6 +103,20 @@ def _life_after(t: EnemyTitan, after: GameState) -> int:
     return 0 if t.card_id in after.defeated else (t.life or 0)
 
 
+TURN_STARTERS = (ev.START_TURN, ev.SET_STARTER, ev.END_TURN)
+
+
+def starts_enemy_turn(action: Action, before: GameState) -> bool:
+    """True when this action hands the turn to the enemy, whose start-of-turn effects then resolve."""
+    if before.phase == "fight_start":
+        return action.kind == ev.SET_STARTER and action.args.get("side") == "enemy"
+    if before.phase != "combat":
+        return False
+    if action.kind == ev.END_TURN:
+        return before.active_side == "players"
+    return action.kind == ev.START_TURN and before.active_side == "enemy" and not before.turn_started
+
+
 def is_ultimate(action: Action, before: GameState) -> bool:
     """Convention: switching Charge off during the enemy's turn means the Ultimate fired."""
     t = before.find(action.args.get("target", ""))
@@ -134,7 +148,7 @@ def ko_params(action: Action, before: GameState, after: GameState, setting: str 
                                t.armor, a.get("replacement")).final
     elif action.kind == ev.LIFE_ADJUST:
         blow = abs(int(action.args.get("delta", 0)))
-    if action.kind == ev.START_TURN and (t.statuses.fire or t.statuses.poison):
+    if starts_enemy_turn(action, before) and (t.statuses.fire or t.statuses.poison):
         params.update(style="dissolve", color="fire" if t.statuses.fire else "poison")
     elif last or (blow is not None and blow >= 5):
         params["style"] = "shatter"
@@ -204,8 +218,16 @@ def cues_for(
     if kind == ev.BEGIN_GAME and before.phase == "start" and after.phase != "start":
         b.add("title", "screen", True, difficulty=difficulty or None)
 
+    # Turn order.
+    if kind == ev.SET_STARTER and before.phase == "fight_start" and after.phase == "combat" and after.arena:
+        b.add("vs", "screen", True, name=after.arena.name, card=card_target(after.arena.card_id),
+              role=after.enemy_role, word=_word("fight", lang), taunt=taunt("fight", n, lang))
+        b.add("turn_banner", "screen", side=after.active_side)
+    if kind == ev.END_TURN and after.active_side != before.active_side and after.active_side:
+        b.add("turn_banner", "screen", side=after.active_side)
+
     # Start-of-turn ticks, then damage and heal.
-    if kind == ev.START_TURN and bt is not None and (after.turn_started or after.result) and not before.turn_started:
+    if starts_enemy_turn(action, before) and bt is not None and (after.turn_started or after.result):
         target = card_target(bt.card_id)
         b.add("lunge", target, taunt=taunt("start_turn", n, lang))
         life_to = _life_after(bt, after)
@@ -258,14 +280,6 @@ def cues_for(
                     b.add("charge_off", target)
             elif args.get("flag") == "ultimate_form" and new.ultimate_form and not old.ultimate_form:
                 b.add("ultimate_form", target)
-
-    # Turn order.
-    if kind == ev.SET_STARTER and before.phase == "fight_start" and after.phase == "combat" and after.arena:
-        b.add("vs", "screen", True, name=after.arena.name, card=card_target(after.arena.card_id),
-              role=after.enemy_role, word=_word("fight", lang), taunt=taunt("fight", n, lang))
-        b.add("turn_banner", "screen", side=after.active_side)
-    if kind == ev.END_TURN and after.active_side != before.active_side and after.active_side:
-        b.add("turn_banner", "screen", side=after.active_side)
 
     if kind == ev.SWAP and bt is not None and after.arena is not None and after.arena.card_id != bt.card_id:
         b.add("swap", card_target(after.arena.card_id), out=card_target(bt.card_id))
@@ -332,7 +346,7 @@ def game_summary(initial: GameState, actions: list[Action]) -> dict[str, Any]:
     for a in actions:
         nxt = apply(state, a)
         t = state.arena
-        if t is not None and a.kind in (ev.DAMAGE, ev.START_TURN, ev.LIFE_ADJUST):
+        if t is not None and a.kind in (ev.DAMAGE, ev.START_TURN, ev.SET_STARTER, ev.END_TURN, ev.LIFE_ADJUST):
             damage += max(0, (t.life or 0) - _life_after(t, nxt))
         if is_ultimate(a, state):
             ultimates += 1

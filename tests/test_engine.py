@@ -20,7 +20,7 @@ def run(setup, *actions):
     return reduce(initial_state(setup, CAT), [act(ev.BEGIN_GAME), *actions])
 
 
-ENEMY_TURN = (act(ev.SET_STARTER, side="enemy"), act(ev.START_TURN))
+ENEMY_TURN = (act(ev.SET_STARTER, side="enemy"),)
 
 
 def test_levels_are_beginner_and_expert():
@@ -79,7 +79,7 @@ def test_turns_alternate_without_die_input():
     st = run(s, *ENEMY_TURN, act(ev.END_TURN))
     assert st.active_side == "players" and st.turn_started
     st = run(s, *ENEMY_TURN, act(ev.END_TURN), act(ev.END_TURN))
-    assert st.active_side == "enemy" and not st.turn_started
+    assert st.active_side == "enemy" and st.turn_started
 
 
 def test_charge_flag_toggles():
@@ -178,16 +178,18 @@ def test_expert_guide_omits_champion_fight_start_text():
     assert beginner.primary == expert.primary
 
 
-def test_expert_guide_omits_redundant_enemy_turn_start_text():
-    state = run(make_setup(), act(ev.SET_STARTER, side="enemy"))
-    expert = guide(state, GuidanceSettings(level="Expert"))
-    assert expert.step == "enemy_turn_start"
-    assert expert.lines == []
-    assert [(action.label, action.kind) for action in expert.primary] == [("Start enemy turn", ev.START_TURN)]
+def test_enemy_turn_starts_without_extra_step_and_ticks():
+    s = make_setup()
+    tid = run(s).arena.card_id
+    st = run(s, act(ev.SET_STARTER, side="players"), act(ev.TOKEN, target=tid, token="poison", delta=2), act(ev.END_TURN))
+    assert st.active_side == "enemy" and st.turn_started
+    assert st.arena.life == st.arena.max_life - 2
 
+    state = run(s, act(ev.SET_STARTER, side="enemy"))
+    expert = guide(state, GuidanceSettings(level="Expert"))
     beginner = guide(state, GuidanceSettings(level="Beginner"))
+    assert expert.step == beginner.step == "enemy_turn"
     assert any("start-of-turn abilities" in line for line in beginner.lines)
-    assert beginner.primary == expert.primary
 
 
 def test_expert_guide_omits_enemy_roll_text():

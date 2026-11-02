@@ -78,7 +78,7 @@ def step_of(state: GameState) -> str:
         return f"cleanup_{state.result.reason}" if state.result else "cleanup_both_defeated"
     if state.active_side == "players":
         return "players_turn"
-    return "enemy_turn" if state.turn_started else "enemy_turn_start"
+    return "enemy_turn"
 
 
 def _name(state: GameState, card_id: str | None) -> str:
@@ -115,9 +115,6 @@ def _context(state: GameState, lang: str) -> dict[str, Any]:
         actions = 1 + t.statuses.action
         ctx["actions"] = actions
         ctx["action_word"] = tr("word.action" if actions == 1 else "word.actions", lang)
-        dmg = t.statuses.poison + t.statuses.fire
-        if dmg:
-            ctx["tick_line"] = tr("guide.tick_line", lang, poison=t.statuses.poison, fire=t.statuses.fire, dmg=dmg)
         bc = t.statuses.blessed_cursed
         if bc in ("blessed", "cursed"):
             ctx["dice_line"] = tr(f"guide.dice_{bc}", lang)

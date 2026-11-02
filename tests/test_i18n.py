@@ -116,3 +116,34 @@ def test_overlay_texts_are_translated():
     assert set(de) == set(en)
     assert de["final_fight"] == "LETZTER KAMPF" and en["final_fight"] == "FINAL FIGHT"
     assert de["token.poison"] == "Gift" and de["slash"] == "SCHWING!"
+
+
+# Terms from assets/Final Titan Terminology Database - TERMINOLOGY.csv that must not appear in German texts.
+WRONG_GERMAN = re.compile(
+    r"Tempo|TMP|[Mm]arker|Aufladung|Teamkraft|Gesegnet|Verflucht|Angriffstabelle|ÜBERSPRINGEN|\bLeben\b|"
+    r"aufgehoben|Schaden zufügen|Beim-Aufdecken|volles Leben|\b(?:einen|diesen|euren|den|dem|seinen) Titanen\b"
+)
+
+
+def _german_texts():
+    yield from i18n.strings("de").values()
+    cfg = fx.config()
+    for table in (cfg["words"]["de"], cfg["taunts"]["de"]):
+        for value in table.values():
+            yield from (value.values() if isinstance(value, dict) else value if isinstance(value, list) else [value])
+    for spec in _texts()["steps"].values():
+        for value in (spec.get("short"), spec.get("why")):
+            if isinstance(value, dict):
+                yield value["de"]
+        for name in ("lines", "confirms"):
+            if name in spec:
+                yield from spec[name]["de"]
+        for label, _k, _a in spec.get("primary", []):
+            yield label["de"]
+        for title, _path in spec.get("refs", []):
+            yield title["de"]
+
+
+def test_german_texts_use_the_official_terminology():
+    bad = [(m.group(), text) for text in _german_texts() if (m := WRONG_GERMAN.search(str(text)))]
+    assert not bad, bad

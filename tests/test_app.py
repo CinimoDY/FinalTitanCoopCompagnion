@@ -168,7 +168,6 @@ def test_arena_full_flow_without_die_buttons():
     _click(at, "beginner_fight_start_champion_1")
     _click(at, "beginner_fight_start_champion_2")
     _click(at, "primary_fight_start_champion_0")
-    _click(at, "primary_enemy_turn_start")
     assert not any(b.key and b.key.startswith("face_") for b in at.button)
     _click(at, "primary_enemy_turn_0")
     _click(at, "primary_players_turn_0")
