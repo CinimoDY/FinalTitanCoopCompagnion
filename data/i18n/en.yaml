@@ -177,7 +177,7 @@ turn.fight_start: "FIGHT START"
 turn.cleanup: "CLEAN-UP"
 turn.victory: "VICTORY"
 turn.defeat: "DEFEAT"
-roll.title: "ROLL FOR THE ENEMY!"
+roll.button: "Roll"
 
 token.armor: "Armor"
 token.poison: "Poison"

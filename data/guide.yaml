@@ -76,13 +76,15 @@ steps:
     lines:
       en:
         - "Resolve any start-of-turn abilities on {enemy} and the enemy Upgrades."
-        - "Any player: roll one die for the enemy for each of its Actions ({actions} this turn). Look each result up on {enemy}'s Attack Chart and resolve it against your Titan."
+        - "Roll one die for the enemy for each of its Actions ({actions} this turn)."
+        - "Look each result up on {enemy}'s Attack Chart and resolve it against your Titan."
         - "{dice_line}"
         - "Rolled Charge? Flip the Charge token with the Charge switch below the enemy card and take another Action. If it was already flipped, resolve the Ultimate, then turn it back to gray."
         - "If a card makes the enemy decide, choose what is best for the enemy."
       de:
         - "Handelt Zugbeginn-Fähigkeiten von {enemy} und den gegnerischen Upgrades ab."
-        - "Ein beliebiger Spieler würfelt für jede Aktion des Gegners einen Würfel ({actions} in diesem Zug). Schlagt jedes Ergebnis in den Angriffswerten von {enemy} nach und handelt es gegen euren Titan ab."
+        - "Würfelt für jede Aktion des Gegners einen Würfel ({actions} in diesem Zug)."
+        - "Schlagt jedes Ergebnis in den Angriffswerten von {enemy} nach und handelt es gegen euren Titan ab."
         - "{dice_line}"
         - "Wut gewürfelt? Dreht den Wut-Token mit dem Schalter unter der Gegnerkarte um und führt eine weitere Aktion aus. War er schon umgedreht, handelt den Ultimate ab und stellt ihn dann wieder auf grau."
         - "Muss der Gegner laut einer Karte entscheiden, wählt das, was für den Gegner am besten ist."

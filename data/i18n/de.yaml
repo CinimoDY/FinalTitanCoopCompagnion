@@ -177,7 +177,7 @@ turn.fight_start: "KAMPFBEGINN"
 turn.cleanup: "AUFRÄUMEN"
 turn.victory: "SIEG"
 turn.defeat: "NIEDERLAGE"
-roll.title: "WÜRFELT FÜR DEN GEGNER!"
+roll.button: "Würfeln"
 
 token.armor: "Rüstung"
 token.poison: "Gift"

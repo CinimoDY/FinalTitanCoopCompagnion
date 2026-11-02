@@ -302,12 +302,6 @@ def actor_html(kind: str, label: str, portrait: str | None = None) -> str:
     return f'<span class="ft-actor {kind}">{icon}<b>{esc(label)}</b></span>'
 
 
-def enemy_roll_html(actions: int, lang: str = DEFAULT) -> str:
-    word = t("word.action" if actions == 1 else "word.actions", lang)
-    return (f'<div class="ft-roll"><span class="ft-die">&#127922;</span><b>{esc(t("roll.title", lang))}</b>'
-            f'<span class="ft-combo-chip">{int(actions)} {esc(word)}</span></div>')
-
-
 def ticker_html(state: GameState, lang: str = DEFAULT) -> str:
     entry = next((e for e in reversed(state.log) if e.kind != "hint"), None)
     if entry is None:

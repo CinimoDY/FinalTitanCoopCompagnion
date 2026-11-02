@@ -200,7 +200,7 @@ def test_expert_guide_omits_enemy_roll_text():
     assert [(action.label, action.kind) for action in expert.primary] == [("End enemy turn", ev.END_TURN)]
 
     beginner = guide(state, GuidanceSettings(level="Beginner"))
-    assert any("roll one die" in line for line in beginner.lines)
+    assert any("Roll one die" in line for line in beginner.lines)
     assert beginner.primary == expert.primary
 
 

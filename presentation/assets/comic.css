@@ -258,12 +258,19 @@ div[class*="_lang_"][class*="_on"] .ft-flag-name { color: var(--ft-yellow); }
 .st-key-ft_caption > :has(> .st-key-ft_guide_content) { flex: 1 1 0% !important; min-height: 0; }
 .st-key-ft_caption .st-key-ft_guide_content { height: 100% !important; min-height: 0; overflow-y: auto; }
 .st-key-ft_caption > :has(> .st-key-ft_guide_actions) { flex: none !important; margin-top: auto; }
+/* Expert mode: the caption box hugs its content instead of filling the column. */
+.st-key-ft_screen > :has(> .st-key-ft_caption .ft-expert) { align-self: start !important; max-height: 100%; }
+.st-key-ft_screen .st-key-ft_caption:has(.ft-expert) { height: auto !important; }
+.st-key-ft_caption:has(.ft-expert) > :has(> .st-key-ft_guide_content) { flex: none !important; }
+.st-key-ft_caption:has(.ft-expert) .st-key-ft_guide_content { height: auto !important; padding-bottom: 12px; }
+[class*="st-key-ft_guide_"] [data-testid="stElementContainer"]:has(.ft-expert, .ft-roll, .ft-slot) { display: none !important; }
 [class*="st-key-ft_caption"], [class*="st-key-ft_caption"] p, [class*="st-key-ft_caption"] li, [class*="st-key-ft_caption"] label,
 [class*="st-key-ft_caption"] span, [class*="st-key-ft_caption"] [data-testid="stCaptionContainer"], [class*="st-key-ft_caption"] summary { color: #111 !important; }
 [class*="st-key-ft_caption"] p { font-size: 1.02rem; line-height: 1.35; }
 [class*="st-key-ft_caption"] p.ft-guide-head { font-family: var(--ft-head); font-size: 1.6rem; line-height: 1.1; letter-spacing: .03em; text-transform: uppercase; margin: 0; }
 [class*="st-key-ft_caption"] li { font-size: 1.02rem; line-height: 1.35; margin-bottom: .35rem; }
 [class*="st-key-ft_caption"] li::marker { color: #000; content: "\25B6\00A0 "; font-size: .75em; }
+[class*="st-key-ft_caption"] ol li::marker { content: counter(list-item) ".\00A0 "; font-family: var(--ft-head); font-size: 1em; color: inherit; }
 [class*="st-key-ft_caption"] [data-testid="stButton"] button[kind="primary"] {
   background: #111 !important; color: var(--ft-yellow) !important; font-size: 1.35rem; min-height: 52px; box-shadow: 4px 4px 0 #6b5900 !important;
 }
@@ -283,9 +290,7 @@ div[class*="_lang_"][class*="_on"] .ft-flag-name { color: var(--ft-yellow); }
 .ft-actor.players { background: var(--ft-cyan); color: #001 !important; }
 .ft-actor.all { background: #5c6773; color: #fff !important; }
 .ft-actor b { color: inherit !important; }
-.ft-roll { display: flex; align-items: center; gap: 10px; margin-top: 6px; }
-.ft-roll b { font-family: var(--ft-head); font-size: 1.35rem; letter-spacing: .06em; color: #fff; text-shadow: 3px 3px 0 #000; line-height: 1.05; }
-.ft-die { font-size: 1.8rem; display: inline-block; animation: ft-die 1s infinite; }
+.st-key-ft_enemy_roll button p::before { content: "\1F3B2"; display: inline-block; margin-right: .4em; animation: ft-die 1s infinite; }
 .ft-combo-chip { font-family: var(--ft-num); background: #000; color: var(--ft-yellow) !important; padding: 1px 8px; border-radius: 4px; }
 
 /* Command pad */
@@ -317,9 +322,9 @@ div[class*="_lang_"][class*="_on"] .ft-flag-name { color: var(--ft-yellow); }
 .ft-card { position: relative; display: inline-block; line-height: 0; max-width: 100%; }
 .ft-float { position: relative; display: inline-block; max-width: 100%; transform-style: preserve-3d; }
 .ft-img { display: block; max-width: 100%; width: auto; height: auto; object-fit: contain; border-radius: 10px; user-select: none;
-  box-shadow: 0 0 0 2px rgba(230,57,70,.55), 0 0 14px rgba(230,57,70,.25), 0 10px 22px rgba(0,0,0,.85); }
+  box-shadow: 0 10px 22px rgba(0,0,0,.85); }
 .ft-card.arena .ft-img { max-height: calc(100cqh - 110px);
-  box-shadow: 0 0 0 3px rgba(230,57,70,.8), 0 0 34px rgba(230,57,70,.45), 0 16px 34px rgba(0,0,0,.9);
+  box-shadow: 0 16px 34px rgba(0,0,0,.9);
   transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); transition: transform .12s ease-out; }
 .ft-card.arena .ft-float::after { content: ""; position: absolute; inset: 0; border-radius: 10px; pointer-events: none;
   background: radial-gradient(circle at var(--mx, 50%) var(--my, 30%), rgba(255,255,255,.16), transparent 45%); mix-blend-mode: screen; }

@@ -168,6 +168,11 @@ def _guide_panel(state: GameState, g: Guidance, cat) -> None:
     portrait = view.card_src(cat, "titans", state.arena.card_id, "thumb", session.lang()) if state.arena else None
     confirmation = None
     with st.container(key="ft_guide_content"):
+        # Style markers sit in their own hidden blocks. Every step emits the same number of them: Streamlit keeps
+        # leftover elements from the previous run on screen until the rerun ends, which would resize the box.
+        if session.settings().level == "Expert":
+            _md('<span class="ft-expert"></span>')
+        _md('<span class="ft-roll"></span>' if g.step == "enemy_turn" and state.arena is not None else '<span class="ft-slot"></span>')
         _md(view.actor_html(g.actor_kind, g.actor_label, portrait))
         if g.confirms:
             marker = (g.step, state.event_count)
@@ -180,9 +185,12 @@ def _guide_panel(state: GameState, g: Guidance, cat) -> None:
         elif g.step.startswith("cleanup_") and len(g.lines) > 1:
             _md(f'<p class="ft-guide-head">{esc(g.lines[0])}</p>')
             st.markdown("\n".join(f"- {line}" for line in g.lines[1:]))
+        elif g.step == "enemy_turn" and state.arena is not None:
+            if g.lines:
+                st.markdown("\n".join(f"{i}. {line}" for i, line in enumerate(g.lines[:3], 1)))
+            for line in g.lines[3:]:
+                st.caption(line)
         else:
-            if g.step == "enemy_turn" and state.arena is not None:
-                _md(view.enemy_roll_html(1 + state.arena.statuses.action, session.lang()))
             for line in g.lines:
                 st.markdown(line)
         if confirmation is None:
@@ -199,9 +207,14 @@ def _guide_panel(state: GameState, g: Guidance, cat) -> None:
             st.button(label, type="primary", key=f"beginner_{g.step}_{step}",
                       on_click=lambda: st.session_state.update(beginner_progress=(marker, step + 1)), width="stretch")
         elif g.primary:
-            for i, (col, p) in enumerate(zip(st.columns(len(g.primary)), g.primary)):
-                col.button(p.label, type="primary", key=f"primary_{g.step}_{i}",
-                           on_click=session.dispatch, args=(p.kind,), kwargs=p.args, width="stretch")
+            with st.container(key="ft_guide_buttons", horizontal=True):
+                if g.step == "enemy_turn":
+                    st.button(tr("roll.button"), key="ft_enemy_roll", type="primary", width="stretch")
+                for i, p in enumerate(g.primary):
+                    st.button(p.label, type="primary", key=f"primary_{g.step}_{i}",
+                              on_click=session.dispatch, args=(p.kind,), kwargs=p.args, width="stretch")
+                if g.step == "players_turn":
+                    _md('<span class="ft-slot"></span>')  # same element count as the enemy turn's Roll + End
 
 
 # --------------------------------------------------------------- command pad
@@ -236,10 +249,9 @@ def _controls(state: GameState, cat) -> None:
     with st.container(key="ft_cmd_row", horizontal=True):
         with st.popover(tr("pad.heal_menu"), width="stretch", key="pad_heal"):
             st.number_input(tr("pad.amount"), 1, 99, 1, key="heal_amt")
-            h1, h2, h3 = st.columns(3)
+            h1, h2 = st.columns(2)
             h1.button(tr("pad.heal"), on_click=lambda: session.dispatch(ev.HEAL, amount=int(ss.heal_amt)), key="heal_go")
             h2.button(tr("pad.life_up"), on_click=lambda: session.dispatch(ev.LIFE_ADJUST, delta=int(ss.heal_amt)), key="life_up")
-            h3.button(tr("pad.life_down"), on_click=lambda: session.dispatch(ev.LIFE_ADJUST, delta=-int(ss.heal_amt)), key="life_down")
 
         with st.popover(tr("pad.tokens_menu"), width="stretch", key="pad_tokens"):
             enemies = state.enemies()
