@@ -22,7 +22,7 @@ TITAN_ALIASES = {
     "genesis10": "genesis1point0",
 }
 
-TITAN_FIELDS = ["id", "name", "max_life", "speed", "armor", "team_power", "advanced", "enemy_usable", "legendary_id", "expansion"]
+TITAN_FIELDS = ["id", "name", "name_de", "max_life", "speed", "armor", "team_power", "advanced", "enemy_usable", "legendary_id", "expansion"]
 UPGRADE_FIELDS = ["id", "name", "advanced", "enemy_usable", "legendary", "expansion"]
 
 
@@ -33,7 +33,7 @@ def norm(text: str) -> str:
     return re.sub(r"[^a-z0-9]", "", text.lower())
 
 
-def read_english_rows() -> list[dict[str, str]]:
+def read_rows(language: str = "English") -> list[dict[str, str]]:
     # Encoding is mixed per line: UTF-8 for most, cp1252 for some.
     def decode(line: bytes) -> str:
         try:
@@ -46,7 +46,7 @@ def read_english_rows() -> list[dict[str, str]]:
     header = [h.replace("\n", " ").strip() for h in rows[0]]
     result = []
     for r in rows[1:]:
-        if r and r[0].strip() == "English":
+        if r and r[0].strip() == language:
             result.append(dict(zip(header, r)))
     return result
 
@@ -65,9 +65,10 @@ def flag(value: str) -> str:
 
 
 def main() -> None:
-    rows = read_english_rows()
+    rows = read_rows()
     titan_rows = [r for r in rows if r["Type"] == "Titan"]
     upgrade_rows = [r for r in rows if r["Type"] == "Upgrade"]
+    german = {r["Original Card Name"]: r["Localized Card Name"].strip() for r in read_rows("German") if r["Type"] == "Titan"}
 
     titan_by_norm = {norm(r["Original Card Name"]): r for r in titan_rows}
     for alias, target in TITAN_ALIASES.items():
@@ -85,6 +86,7 @@ def main() -> None:
         titans.append({
             "id": path.stem,
             "name": row["Original Card Name"],
+            "name_de": german.get(row["Original Card Name"], ""),
             "max_life": row["Max Life"] or "0",
             "speed": row["Speed"] or "0",
             "armor": row["Armor"] or "0",

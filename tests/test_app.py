@@ -164,7 +164,7 @@ def test_draft_explains_rules_only_to_beginners(level, rules):
     assert not at.exception, at.exception
     texts = [entry.value for entry in at.markdown]
     assert any("youngest player" in text for text in texts) == rules
-    assert any("Max Life" in text and "Speed" in text for text in texts)
+    assert any("Max Life" in text and "Speed" in text for text in texts) == rules
 
 
 def test_draft_cards_toggle_once():
@@ -374,7 +374,7 @@ def test_language_defaults_to_english_and_flags_switch_setup_to_german():
     _click(at, "setup_langbtn_de")
     assert at.session_state["lang"] == "de"
     assert at.title[0].value == "Final Titan Koop-Begleiter"
-    assert at.query_params["lang"] == "de"
+    assert at.query_params["lang"] == ["de"]  # AppTest parses the URL, so values are lists
     assert any(b.label == "Weiter zum Draft" for b in at.button)
 
 

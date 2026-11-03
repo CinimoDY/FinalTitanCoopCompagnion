@@ -5,3 +5,4 @@ __pycache__/
 
 CLAUDE.local.md
 .streamlit/secrets.toml
+run_all_tests.bat

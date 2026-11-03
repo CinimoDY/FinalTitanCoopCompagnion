@@ -71,7 +71,8 @@ draft.rules: |
   - Ersetzt ihn sofort vom Stapel, sodass immer 3 Titanen zur Wahl liegen.
   - Macht weiter, bis **jeder Spieler {per} Titanen** hat. Sie bilden eure Bank.
   - Ihr dürft eure Wahl miteinander absprechen.
-draft.intro: "Draftet eure Titanen wie gewohnt am Tisch und klickt dann die **{need}** Titanen an, die ihr genommen habt, damit der Gegner sie nie bekommt. Findet jeden über die maximalen Lebenspunkte und Geschwindigkeit auf der Karte. Klickt eine markierte Karte erneut an, um die Markierung zu entfernen."
+draft.intro: "Draftet eure Titanen wie gewohnt am Tisch und klickt dann die **{need}** Titanen an, die ihr genommen habt, damit der Gegner sie nie bekommt."
+draft.intro_help: "Findet jeden über die maximalen Lebenspunkte und Geschwindigkeit auf der Karte. Klickt eine markierte Karte erneut an, um die Markierung zu entfernen."
 draft.start: "Gegnerstapel bauen und starten"
 draft.empty: "Freier Platz"
 draft.empty_aria: "Freier Titanenplatz {n}"
@@ -249,6 +250,7 @@ cat.no_cards: "Keine Karten."
 cat.prev: "Zurück"
 cat.next: "Weiter"
 cat.name: "Name"
+cat.name_de: "Deutscher Name"
 cat.expansion: "Set"
 cat.max_life: "Maximale Lebenspunkte"
 cat.speed: "Geschwindigkeit"

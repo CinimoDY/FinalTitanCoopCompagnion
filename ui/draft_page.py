@@ -58,9 +58,10 @@ def render() -> None:
     taken = list(dict.fromkeys(setup.player_titans))  # each Titan only once
     setup.player_titans = taken
     st.title(tr("draft.title"))
-    if session.settings().level == "Beginner":
+    beginner = session.settings().level == "Beginner"
+    if beginner:
         st.markdown(tr("draft.rules", per=TITANS_PER_PLAYER))
-    st.write(tr("draft.intro", need=need))
+    st.write(tr("draft.intro", need=need) + (" " + tr("draft.intro_help") if beginner else ""))
 
     with st.container(key="draft_header"):
         action = st.columns([5, 2], vertical_alignment="center")[1]
@@ -92,7 +93,7 @@ def render() -> None:
         if (not setup.expansions or t.expansion in setup.expansions)
         and (power is None or t.max_life == power)
         and (speed is None or t.speed == speed)
-        and (not name or name.lower() in t.name.lower())
+        and (not name or t.matches(name, session.lang()))
     ]
     pool.sort(key=lambda t: (t.max_life, t.speed, t.name))
     st.caption(tr("draft.matches", n=len(pool)))

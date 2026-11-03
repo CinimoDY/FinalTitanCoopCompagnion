@@ -48,6 +48,13 @@ def test_every_titan_appears_only_once_across_the_game():
         assert len(set(s.enemy_upgrades)) == len(s.enemy_upgrades)
 
 
+def test_name_search_uses_german_names_only_in_german():
+    knight = CAT.titans["crimsonKnight"]
+    assert knight.name_de == "Dämmerklinge"
+    assert knight.matches("crimson", "en") and knight.matches("crimson", "de")
+    assert knight.matches("dämmer", "de") and not knight.matches("dämmer", "en")
+
+
 def test_seed_is_deterministic():
     assert make_setup(seed=5).enemy_titans == make_setup(seed=5).enemy_titans
 

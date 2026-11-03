@@ -14,7 +14,7 @@ IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp"}
 TITAN_BACK_STEM = "finalTitanCardBackside"
 BASE_LANG = "en"  # the images directly under assets/titans and assets/upgrades; other languages live in assets/<lang>/
 
-TITAN_FIELDS = ["id", "name", "max_life", "speed", "armor", "team_power", "advanced", "enemy_usable", "legendary_id", "expansion"]
+TITAN_FIELDS = ["id", "name", "name_de", "max_life", "speed", "armor", "team_power", "advanced", "enemy_usable", "legendary_id", "expansion"]
 UPGRADE_FIELDS = ["id", "name", "advanced", "enemy_usable", "legendary", "expansion"]
 
 
@@ -38,6 +38,12 @@ class TitanCard:
     legendary_id: str = ""
     expansion: str = ""
     image: Path | None = None
+    name_de: str = ""
+
+    def matches(self, query: str, lang: str) -> bool:
+        """Name search: English names always, German names too when the viewer reads German."""
+        names = [self.name] + ([self.name_de] if lang == "de" and self.name_de else [])
+        return any(query.casefold() in n.casefold() for n in names)
 
 
 @dataclass
@@ -130,7 +136,7 @@ def load_catalog(data_dir: Path = DATA_DIR, assets: Path = ASSETS) -> Catalog:
             armor=_to_int(r.get("armor", "0")), team_power=_to_bool(r.get("team_power", "")),
             advanced=_to_bool(r.get("advanced", "")), enemy_usable=_to_bool(r.get("enemy_usable", "true")),
             legendary_id=r.get("legendary_id", "") or "", expansion=r.get("expansion", ""),
-            image=t_images.get(r["id"]),
+            image=t_images.get(r["id"]), name_de=r.get("name_de", "") or "",
         )
         titans.setdefault(card.id, card)
     upgrades: dict[str, UpgradeCard] = {}
@@ -166,7 +172,7 @@ def save_catalog(catalog: Catalog, data_dir: Path = DATA_DIR) -> None:
         w = csv.writer(fh)
         w.writerow(TITAN_FIELDS)
         for t in catalog.titans.values():
-            w.writerow([t.id, t.name, t.max_life, t.speed, t.armor, _b(t.team_power), _b(t.advanced), _b(t.enemy_usable), t.legendary_id, t.expansion])
+            w.writerow([t.id, t.name, t.name_de, t.max_life, t.speed, t.armor, _b(t.team_power), _b(t.advanced), _b(t.enemy_usable), t.legendary_id, t.expansion])
     with open(data_dir / "upgrades.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
         w.writerow(UPGRADE_FIELDS)

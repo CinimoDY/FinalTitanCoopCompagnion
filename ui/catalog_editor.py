@@ -62,6 +62,7 @@ def render() -> None:
         card.name = st.text_input(tr("cat.name"), card.name, key=f"{key}_name")
         card.expansion = st.text_input(tr("cat.expansion"), card.expansion, key=f"{key}_exp")
         if kind == "Titans":
+            card.name_de = st.text_input(tr("cat.name_de"), card.name_de, key=f"{key}_name_de")
             card.max_life = int(st.number_input(tr("cat.max_life"), 0, 99, card.max_life, key=f"{key}_life"))
             card.speed = int(st.number_input(tr("cat.speed"), 0, 99, card.speed, key=f"{key}_spd"))
             card.armor = int(st.number_input(tr("cat.armor"), 0, 20, card.armor, key=f"{key}_arm"))

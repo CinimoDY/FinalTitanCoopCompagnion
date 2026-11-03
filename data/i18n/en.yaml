@@ -71,7 +71,8 @@ draft.rules: |
   - Replace it right away from the top of the deck, so there are always 3 Titans to choose from.
   - Keep going until **every player has {per} Titans**. These form your bench.
   - You may discuss your picks with each other.
-draft.intro: "Draft your Titans on the table as usual, then click the **{need}** Titans you took, so the enemy never gets them. Find each one by the Max Life and Speed printed on the card. Click a marked card again to unmark it."
+draft.intro: "Draft your Titans on the table as usual, then click the **{need}** Titans you took, so the enemy never gets them."
+draft.intro_help: "Find each one by the Max Life and Speed printed on the card. Click a marked card again to unmark it."
 draft.start: "Build enemy decks and start"
 draft.empty: "Empty spot"
 draft.empty_aria: "Empty Titan spot {n}"
@@ -249,6 +250,7 @@ cat.no_cards: "No cards."
 cat.prev: "Previous"
 cat.next: "Next"
 cat.name: "Name"
+cat.name_de: "German name"
 cat.expansion: "Set"
 cat.max_life: "Max Life"
 cat.speed: "Speed"
