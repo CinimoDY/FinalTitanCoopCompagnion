@@ -88,11 +88,11 @@ def _hud(state: GameState) -> None:
         ss._fight_guidance = session.settings().level
         st.selectbox(tr("guidance.label"), LEVELS, key="_fight_guidance", format_func=lambda v: tr(f"opt.{v}"),
                      on_change=lambda: ss.update(opt_level=ss._fight_guidance, beginner_progress=None))
+        with st.expander(tr("menu.effects"), key="menu_effects"):
+            _fx_menu()
         st.button(tr("menu.log"), key="menu_log", on_click=session.go, args=("log",), width="stretch")
         if session.debug():
             st.button(tr("menu.catalog"), key="menu_catalog", on_click=session.go, args=("catalog",), width="stretch")
-        with st.expander(tr("menu.effects"), key="menu_effects"):
-            _fx_menu()
         st.button(tr("menu.new_game"), key="menu_new", on_click=session.new_game, width="stretch")
     _md(view.hud_center_html(state, lang))
     _md(view.hud_enemy_html(state, lang))

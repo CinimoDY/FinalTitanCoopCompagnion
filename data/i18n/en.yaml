@@ -100,9 +100,9 @@ arena.legendary: "Legendary Upgrade: {name}"
 
 menu.undo: "↶ Undo"
 menu.title: "☰ Menu"
-menu.log: "📜 Battle log and save"
+menu.log: "Battle log and save"
 menu.catalog: "🗂 Catalog editor"
-menu.effects: "✨ Effects"
+menu.effects: "Effects"
 menu.new_game: "New game"
 
 fx.intensity: "FX intensity"
