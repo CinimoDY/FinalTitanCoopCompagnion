@@ -106,7 +106,7 @@ def _context(state: GameState, lang: str) -> dict[str, Any]:
     t = state.arena
     ctx: dict[str, Any] = {"left": state.player_titans_left, "total": state.player_titans_total}
     if state.result is not None:
-        ctx["enemy"] = _name(state, state.result.enemy_id)
+        ctx["enemy"] = state.result.enemy_name or _name(state, state.result.enemy_id)
         if state.result.legendary:
             ctx["legendary_line"] = tr("guide.legendary_line", lang)
     if t is not None:

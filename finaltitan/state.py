@@ -77,6 +77,7 @@ class FightResult:
     reason: str  # enemy_defeated | player_defeated | both_defeated | enemy_returned | player_returned
     winner: Side | None
     enemy_id: str
+    enemy_name: str = ""
     legendary: str | None = None
 
 

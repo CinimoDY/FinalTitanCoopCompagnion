@@ -178,6 +178,16 @@ def test_expert_guide_omits_champion_fight_start_text():
     assert beginner.primary == expert.primary
 
 
+def test_cleanup_guide_names_defeated_enemy():
+    s = make_setup()
+    t = run(s).arena
+    st = run(s, act(ev.SET_STARTER, side="players"), act(ev.FIGHT_END, reason="enemy_defeated"))
+    g = guide(st, GuidanceSettings(level="Beginner"))
+    texts = [*g.lines, g.why, *g.confirms, *(p.label for p in g.primary)]
+    assert any(t.name in x for x in texts)
+    assert not any(t.card_id in x for x in texts)
+
+
 def test_enemy_turn_starts_without_extra_step_and_ticks():
     s = make_setup()
     tid = run(s).arena.card_id

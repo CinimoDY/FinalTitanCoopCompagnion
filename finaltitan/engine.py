@@ -291,7 +291,7 @@ def _end_fight(state: GameState, reason: str) -> None:
         return
     winner = {"enemy_defeated": "players", "enemy_returned": "players", "player_defeated": "enemy",
               "player_returned": "enemy"}.get(reason)
-    result = FightResult(reason=reason, winner=winner, enemy_id=t.card_id)  # type: ignore[arg-type]
+    result = FightResult(reason=reason, winner=winner, enemy_id=t.card_id, enemy_name=t.name)  # type: ignore[arg-type]
     if reason in ("enemy_defeated", "both_defeated"):
         result.legendary = t.legendary_upgrade
         state.defeated.append(t.card_id)

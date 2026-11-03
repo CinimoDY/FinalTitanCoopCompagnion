@@ -213,7 +213,7 @@ class GameState:
     phase: "start" | "fight_start" | "combat" | "cleanup" | "victory" | "defeat"
     active_side: "enemy" | "players" | None
     turn_started: bool; turn_no: int; fight_no: int
-    result: FightResult | None    # reason, winner, enemy_id, legendary
+    result: FightResult | None    # reason, winner, enemy_id, enemy_name, legendary
     log: list[LogEntry]           # numbered by action index; kind "event" | "hint"
     hints: list[str]              # hints from the last action only
     last_reveals: list[Reveal]    # Titans/Upgrades revealed by the last action
