@@ -6,8 +6,8 @@ The app is an enemy display: one shared screen at the table shows the current en
 
 ## Features
 
-- **Setup**: 1 to 3 players, difficulty from Easy to Insane, or a fixed challenge preset. Expansion and Advanced filters and an optional seed.
-- **Draft**: mark the Titans the players drafted so the enemy can't get them. You can filter by Power, Speed and name.
+- **Setup**: 1 to 3 players, difficulty from Easy to Insane, or a fixed challenge preset. Set and Advanced filters and an optional seed.
+- **Draft**: mark the Titans the players drafted so the enemy can't get them. You can filter by Max Life, Speed and name.
 - **Enemy decks**: a seeded random enemy Titan deck and a hidden enemy Upgrade hand, sized by the difficulty table. Legendary Upgrades attach automatically.
 - **Guided play**: an instruction panel always says who acts next (enemy, players or everyone) and what to do, with "Why?" explanations and hints. Choose Beginner or Expert guidance.
 - **Enemy rules engine**: queue order, Champion/Challenger roles, Upgrade reveals, Charge and Ultimate, Status tokens, start-of-turn Poison and Fire damage, the damage order (Armor, Dodge, Minion), fight clean-up, and victory and defeat detection.

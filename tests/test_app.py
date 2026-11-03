@@ -164,7 +164,7 @@ def test_draft_explains_rules_only_to_beginners(level, rules):
     assert not at.exception, at.exception
     texts = [entry.value for entry in at.markdown]
     assert any("youngest player" in text for text in texts) == rules
-    assert any("Power" in text and "Speed" in text for text in texts)
+    assert any("Max Life" in text and "Speed" in text for text in texts)
 
 
 def test_draft_cards_toggle_once():
