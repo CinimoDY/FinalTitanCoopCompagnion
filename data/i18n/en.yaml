@@ -106,6 +106,15 @@ menu.catalog: "🗂 Catalog editor"
 menu.effects: "Effects"
 menu.new_game: "New game"
 
+# Asked before a running game is abandoned (New game, Continue to draft, Build enemy decks).
+confirm.title: "Abandon the current game?"
+confirm.body: "Fight {fight}, {defeated} of {total} enemies defeated. The game and its log are lost unless you save them first."
+confirm.save: "Save the game first (JSON)"
+confirm.new_game: "Abandon and start a new game"
+confirm.draft: "Abandon and go to the draft"
+confirm.rebuild: "Abandon and build new enemy decks"
+confirm.cancel: "Keep playing"
+
 fx.intensity: "FX intensity"
 fx.intensity_help: "Low: no particles and no shake."
 fx.cinematics: "Cinematics"

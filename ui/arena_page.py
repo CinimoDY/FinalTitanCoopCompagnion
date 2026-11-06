@@ -93,7 +93,10 @@ def _hud(state: GameState) -> None:
         st.button(tr("menu.log"), key="menu_log", on_click=session.go, args=("log",), width="stretch")
         if session.debug():
             st.button(tr("menu.catalog"), key="menu_catalog", on_click=session.go, args=("catalog",), width="stretch")
-        st.button(tr("menu.new_game"), key="menu_new", on_click=session.new_game, width="stretch")
+        if state.phase in ("victory", "defeat"):
+            st.button(tr("menu.new_game"), key="menu_new", on_click=session.new_game, width="stretch")
+        else:
+            st.button(tr("menu.new_game"), key="menu_new", on_click=components.ask_confirm, args=("new_game",), width="stretch")
     _md(view.hud_center_html(state, lang))
     _md(view.hud_enemy_html(state, lang))
 
@@ -356,6 +359,7 @@ def render() -> None:
                     _controls(state, cat)
             with st.container(key="ft_ticker", horizontal=True, vertical_alignment="center"):
                 _ticker(state)
+    components.confirm_dialog({"new_game": session.new_game})
     assets = {"titan_back": view.back_src(cat, "titans", session.lang()), "upgrade_back": view.back_src(cat, "upgrades")}
     pending = bool(state.turn_rolls and state.turn_rolls[-1].pending)
     fx_layer(ss.fx_queue, fx_set, {**assets, "dice": view.dice_srcs()}, {"pending_pick": pending})

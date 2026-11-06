@@ -49,7 +49,7 @@ Streamlit opens the app in your browser, by default at http://localhost:8501. It
    - When the fight ends, the app runs the clean-up and reveals the next Upgrade.
 4. **Log and save**: review the log, or save and load the game.
 
-During a fight, the top bar is replaced by the **☰ Menu**: guidance level, links to the other pages, the effect settings (FX intensity, cinematics, animation speed, sound, taunts, K.O. style, reduced motion) and a **New game** button.
+During a fight, the top bar is replaced by the **☰ Menu**: guidance level, links to the other pages, the effect settings (FX intensity, cinematics, animation speed, sound, taunts, K.O. style, reduced motion) and a **New game** button (it asks for confirmation while a game is running, as do **Continue to draft** and **Build enemy decks and start**).
 
 ## Running the tests
 

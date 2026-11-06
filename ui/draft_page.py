@@ -68,7 +68,10 @@ def render() -> None:
         if len(taken) == need:
             if ss.get("draft_error"):
                 st.error(session.text(ss.draft_error))
-            action.button(tr("draft.start"), type="primary", on_click=_start, width="stretch")
+            if ss.stage == "play":  # a game is running: ask first
+                action.button(tr("draft.start"), type="primary", on_click=components.ask_confirm, args=("rebuild",), width="stretch")
+            else:
+                action.button(tr("draft.start"), type="primary", on_click=_start, width="stretch")
     with st.container(key="draft_slots"):
         for index, col in enumerate(st.columns(max(need, GRID_COLS))[:need]):
             with col:
@@ -104,3 +107,4 @@ def render() -> None:
             with col:
                 _card(t, 320, t.id, taken=t.id in taken, blocked=t.id in reserved or (len(taken) >= need and t.id not in taken),
                       note=tr("draft.reserved") if t.id in reserved else "")
+    components.confirm_dialog({"rebuild": _start})

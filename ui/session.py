@@ -42,6 +42,7 @@ def init() -> None:
     ss.setdefault("fx_queue", [])  # cue dicts of the latest action
     ss.setdefault("fx_marks", {})  # Layer 2 marks of the latest action
     ss.setdefault("fx_cursor", len(ss.events))  # number of actions already turned into cues
+    ss.setdefault("confirm", None)  # kind of the pending "abandon the game?" question, see components.confirm_dialog
     if "lang" not in ss:  # a manual choice is kept in the URL; otherwise the browser locale decides
         ss.lang = pick_lang(st.query_params.get("lang") or st.context.locale)
 
@@ -165,6 +166,7 @@ def debug() -> bool:
 
 
 def go(page: str) -> None:
+    st.session_state.confirm = None
     pg = st.session_state.pages.get(page)
     if pg is not None:
         st.switch_page(pg)

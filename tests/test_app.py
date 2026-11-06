@@ -4,6 +4,8 @@ from unittest.mock import patch
 import pytest
 from streamlit.testing.v1 import AppTest
 
+from finaltitan.events import act
+
 ROOT = str(Path(__file__).resolve().parent.parent)
 
 
@@ -292,13 +294,65 @@ def test_catalog_menu_entry_only_in_debug_mode():
     assert any(b.key == "menu_catalog" for b in at.button)
 
 
-def test_fight_menu_has_no_setup_or_draft_and_new_game_abandons_the_game():
+def test_fight_menu_has_no_setup_or_draft_and_new_game_asks_before_abandoning_the_game():
     at = run_page("arena_page", prepared)
     _click(at, "primary_setup_0")
     assert not any(b.key in ("menu_setup", "menu_draft") for b in at.button)
     _click(at, "menu_new")
+    assert at.session_state["stage"] == "play"  # not yet: the dialog asks first
+    assert at.session_state["confirm"] == "new_game"
+    assert any("Fight 1" in m.value for m in at.markdown)
+    _click(at, "confirm_go")
     assert at.session_state["stage"] == "setup"
     assert at.session_state["events"] == []
+    assert at.session_state["confirm"] is None
+
+
+def test_new_game_question_can_be_declined_and_keeps_the_game():
+    at = run_page("arena_page", prepared)
+    _click(at, "primary_setup_0")
+    events = list(at.session_state["events"])
+    _click(at, "menu_new")
+    _click(at, "confirm_cancel")
+    at.run()  # the dialog closes itself with st.rerun(); AppTest does not rerun on its own
+    assert not at.exception, at.exception
+    assert at.session_state["confirm"] is None
+    assert at.session_state["stage"] == "play"
+    assert at.session_state["events"] == events
+    assert not any(b.key == "confirm_go" for b in at.button)
+
+
+def test_new_game_after_the_game_is_over_does_not_ask():
+    def over(at):  # one player, three Titans: three lost fights end the game
+        prepared(at)
+        fight = [act("set_starter", side="players"), act("fight_end", reason="player_defeated")]
+        at.session_state["events"] = [act("begin_game"), *fight, act("advance_fight"), *fight, act("advance_fight"), *fight]
+    at = run_page("arena_page", over)
+    assert not at.exception, at.exception
+    assert any("DEFEAT" in m.value for m in at.markdown)
+    _click(at, "menu_new")
+    assert at.session_state["stage"] == "setup"
+
+
+def test_setup_continue_asks_while_a_game_is_running():
+    at = run_page("setup_page", prepared)
+    next(b for b in at.button if b.label == "Continue to draft").click().run()
+    assert not at.exception, at.exception
+    assert at.session_state["stage"] == "play"
+    assert at.session_state["confirm"] == "draft"
+    _click(at, "confirm_go")
+    assert at.session_state["stage"] == "draft"
+    assert at.session_state["events"] == []
+
+
+def test_draft_rebuild_asks_while_a_game_is_running():
+    at = run_page("draft_page", prepared)
+    next(b for b in at.button if b.label == "Build enemy decks and start").click().run()
+    assert not at.exception, at.exception
+    assert at.session_state["confirm"] == "rebuild"
+    assert at.session_state["events"] == []  # prepared() starts with no events; nothing was rebuilt yet
+    _click(at, "confirm_cancel")
+    assert at.session_state["confirm"] is None
 
 
 def test_catalog_editor_is_locked_outside_debug_mode():

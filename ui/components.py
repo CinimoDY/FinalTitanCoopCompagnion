@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import html
 import re
+from collections.abc import Callable
 
 import streamlit as st
 
@@ -12,6 +13,43 @@ from ui import images, session
 
 def label(text: str) -> None:
     st.markdown(f'<p class="ft-label">{html.escape(text)}</p>', unsafe_allow_html=True)
+
+
+# Confirmation before a running game is abandoned. A button's on_click asks (sets the kind), the page renders the
+# dialog on that run, and the dialog's primary button performs the page's action. The kind is cleared on every exit
+# (confirm, cancel, dismiss, page change) so the dialog never comes back by itself.
+
+def ask_confirm(kind: str) -> None:
+    st.session_state.confirm = kind
+
+
+def confirm_dialog(actions: dict[str, Callable[[], None]]) -> None:
+    """Shows the dialog if this page's kind was asked for. actions: kind -> the function that abandons the game."""
+    ss = st.session_state
+    kind = ss.get("confirm")
+    if kind not in actions:
+        return
+    tr = session.translator()
+    clear = lambda: ss.update(confirm=None)  # noqa: E731
+
+    def body() -> None:
+        state = session.game()
+        if state is not None:
+            st.write(tr("confirm.body", fight=state.fight_no, defeated=len(state.defeated), total=state.total))
+            st.download_button(tr("confirm.save"), session.to_json(), file_name="final-titan-coop-save.json",
+                               mime="application/json", key="confirm_save")
+        go, keep = st.columns(2)
+        # The browser keeps a dialog open until the script reruns from inside it, so both buttons end with st.rerun()
+        # (a page switch inside the action also ends the run).
+        if go.button(tr(f"confirm.{kind}"), type="primary", key="confirm_go", width="stretch"):
+            clear()
+            actions[kind]()
+            st.rerun()
+        if keep.button(tr("confirm.cancel"), key="confirm_cancel", width="stretch"):
+            clear()
+            st.rerun()
+
+    st.dialog(tr("confirm.title"), on_dismiss=clear)(body)()
 
 
 TAKEN_ARROW = (

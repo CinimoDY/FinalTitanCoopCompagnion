@@ -106,6 +106,15 @@ menu.catalog: "🗂 Katalog-Editor"
 menu.effects: "Effekte"
 menu.new_game: "Neues Spiel"
 
+# Nachfrage, bevor ein laufendes Spiel abgebrochen wird (Neues Spiel, Weiter zum Draft, Gegnerstapel bauen).
+confirm.title: "Laufendes Spiel abbrechen?"
+confirm.body: "Kampf {fight}, {defeated} von {total} Gegnern besiegt. Spiel und Protokoll gehen verloren, wenn ihr sie nicht vorher speichert."
+confirm.save: "Spiel vorher speichern (JSON)"
+confirm.new_game: "Abbrechen und neues Spiel beginnen"
+confirm.draft: "Abbrechen und zum Draft"
+confirm.rebuild: "Abbrechen und neue Gegnerstapel bauen"
+confirm.cancel: "Weiterspielen"
+
 fx.intensity: "Effektstärke"
 fx.intensity_help: "Wenig: keine Partikel und kein Wackeln."
 fx.cinematics: "Zwischensequenzen"

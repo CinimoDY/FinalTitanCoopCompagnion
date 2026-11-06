@@ -10,6 +10,16 @@ from finaltitan.setup import DIFFICULTIES, MAX_PLAYERS, GameSetup
 from ui import components, session
 
 
+def _to_draft(setup: GameSetup) -> None:
+    ss = st.session_state
+    setup.seed = random.randint(1, 999_999)
+    ss.setup = setup
+    ss.events = []
+    ss.version += 1
+    ss.stage = "draft"
+    session.go("draft")
+
+
 def render() -> None:
     session.init()
     ss = st.session_state
@@ -59,13 +69,11 @@ def render() -> None:
             with hint:
                 components.speech_bubble(tr("guidance.hint_title"), tr("guidance.hint"))
 
-    if st.button(tr("setup.continue"), type="primary", disabled=not expansions):
-        setup.seed = random.randint(1, 999_999)
-        ss.setup = setup
-        ss.events = []
-        ss.version += 1
-        ss.stage = "draft"
-        session.go("draft")
+    if ss.stage == "play":  # a game is running: ask first; the dialog uses the setup from this run
+        ss._draft_setup = setup
+        st.button(tr("setup.continue"), type="primary", disabled=not expansions, on_click=components.ask_confirm, args=("draft",))
+    elif st.button(tr("setup.continue"), type="primary", disabled=not expansions):
+        _to_draft(setup)
 
     with st.expander(tr("setup.load_saved")):
         up = st.file_uploader(tr("common.save_file"), type="json", key="setup_upload")
@@ -75,3 +83,4 @@ def render() -> None:
                 st.error(err)
             else:
                 session.go("arena")
+    components.confirm_dialog({"draft": lambda: _to_draft(ss._draft_setup)})
